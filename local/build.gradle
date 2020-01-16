@@ -1,0 +1,11 @@
+plugins {
+    id 'java'
+}
+
+group 'com.gelerion.open.storage.local'
+
+project(':local') {
+    dependencies {
+        implementation project(':api')
+    }
+}

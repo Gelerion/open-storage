@@ -1,0 +1,3 @@
+rootProject.name = 'open-storage'
+
+include 'api', 's3', 'local'

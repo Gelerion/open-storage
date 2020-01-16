@@ -1,0 +1,15 @@
+plugins {
+    id 'java'
+}
+
+group 'com.gelerion.open.storage.api'
+
+dependencies {
+    compile 'org.slf4j:slf4j-api:2.0.0-alpha1'
+
+    testImplementation('org.junit.jupiter:junit-jupiter:5.5.2')
+}
+
+test {
+    useJUnitPlatform()
+}
