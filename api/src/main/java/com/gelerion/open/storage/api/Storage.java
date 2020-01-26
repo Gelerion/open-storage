@@ -3,6 +3,7 @@ package com.gelerion.open.storage.api;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StoragePath;
+import com.gelerion.open.storage.api.writer.StorageWriter;
 
 import java.net.URL;
 import java.util.Set;
@@ -35,7 +36,7 @@ public interface Storage {
 
 //    StorageReader reader(StorageFile file);
 
-//    StorageWriter writer(StorageFile file);
+    StorageWriter writer(StorageFile file);
 
 //    StorageUploader uploader(StorageFile file);
 

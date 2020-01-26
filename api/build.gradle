@@ -4,12 +4,27 @@ plugins {
 
 group 'com.gelerion.open.storage.api'
 
+configurations {
+    providedRuntime
+    testOutput.extendsFrom (testCompile)
+}
+
 dependencies {
     compile 'org.slf4j:slf4j-api:2.0.0-alpha1'
 
     testImplementation('org.junit.jupiter:junit-jupiter:5.5.2')
+    testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.5.2')
 }
 
 test {
     useJUnitPlatform()
+}
+
+task jarTest (type: Jar, dependsOn: testClasses) {
+    from sourceSets.test.output
+    classifier = 'test'
+}
+
+artifacts {
+    testOutput jarTest
 }

@@ -7,5 +7,14 @@ group 'com.gelerion.open.storage.local'
 project(':local') {
     dependencies {
         implementation project(':api')
+
+        testImplementation('org.junit.jupiter:junit-jupiter:5.5.2')
+        testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.5.2')
+
+        testCompile project(path: ':api', configuration: 'testOutput')
     }
+}
+
+test {
+    useJUnitPlatform()
 }

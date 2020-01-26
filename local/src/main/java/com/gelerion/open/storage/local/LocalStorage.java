@@ -4,6 +4,8 @@ import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StoragePath;
+import com.gelerion.open.storage.api.writer.StorageWriter;
+import com.gelerion.open.storage.local.writer.LocalStorageWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +72,11 @@ public class LocalStorage implements Storage {
     @Override
     public long size(StorageFile file) {
         return execOpt(() -> Files.size(unwrapped(file))).orElse(0);
+    }
+
+    @Override
+    public StorageWriter writer(StorageFile file) {
+        return LocalStorageWriter.output(file);
     }
 
     @Override
