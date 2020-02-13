@@ -4,7 +4,9 @@ import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StoragePath;
+import com.gelerion.open.storage.api.reader.StorageReader;
 import com.gelerion.open.storage.api.writer.StorageWriter;
+import com.gelerion.open.storage.local.reader.LocalStorageReader;
 import com.gelerion.open.storage.local.writer.LocalStorageWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +77,11 @@ public class LocalStorage implements Storage {
     }
 
     @Override
+    public StorageReader reader(StorageFile file) {
+        return LocalStorageReader.from(file);
+    }
+
+    @Override
     public StorageWriter writer(StorageFile file) {
         return LocalStorageWriter.output(file);
     }
@@ -119,11 +126,6 @@ public class LocalStorage implements Storage {
 
     @Override
     public StorageFile fullPath(StorageFile file) {
-        return null;
-    }
-
-    @Override
-    public URL downloadUrl(StorageFile file, String partnerId) {
         return null;
     }
 

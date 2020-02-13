@@ -29,8 +29,8 @@ public abstract class StorageIntegrationTest {
         StorageFile file = createFile(fileName);
         storage.writer(file).write(Stream.of("Hello world!", "What a perfect day!"));
 
-//        Path created = Paths.get(STORAGE_PATH, fileName);
-//        assertTrue(Files.exists(created));
+        Path created = Paths.get(fileName);
+        assertTrue(Files.exists(created));
     }
 
     public abstract Storage storageImpl();

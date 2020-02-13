@@ -3,6 +3,7 @@ package com.gelerion.open.storage.api;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StoragePath;
+import com.gelerion.open.storage.api.reader.StorageReader;
 import com.gelerion.open.storage.api.writer.StorageWriter;
 
 import java.net.URL;
@@ -13,7 +14,7 @@ public interface Storage {
     Storage create(StorageDirectory folder);
 
     void delete(StorageDirectory folder);
-//
+
     void delete(StorageFile file);
 
     default void delete(StoragePath path) {
@@ -34,7 +35,7 @@ public interface Storage {
 
 //    StorageFileMetadata metadata(StorageFile file);
 
-//    StorageReader reader(StorageFile file);
+    StorageReader reader(StorageFile file);
 
     StorageWriter writer(StorageFile file);
 
@@ -63,11 +64,4 @@ public interface Storage {
     StorageDirectory fullPath(StorageDirectory folder);
 
     StorageFile fullPath(StorageFile file);
-
-    /**
-     * @param file Path to the file
-     * @param partnerId The name of the federated user. The name is used as an identifier for the temporary security credentials
-     * @throws MandatoryFileNotFoundException If file does not exist
-     */
-    URL downloadUrl(StorageFile file, String partnerId);
 }

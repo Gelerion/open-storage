@@ -7,12 +7,11 @@ import java.nio.file.Paths;
 
 public class LocalStorageFile extends LocalStoragePath implements StorageFile {
 
-    public static StorageFile get(String path) {
+    public static LocalStorageFile get(String path) {
         return get(Paths.get(path));
     }
 
-    private static LocalStorageFile get(Path path) {
-        //TODO: validate invariants aka valid file
+    public static LocalStorageFile get(Path path) {
         return new LocalStorageFile(path);
     }
 
