@@ -7,7 +7,6 @@ import com.gelerion.open.storage.local.LocalStorage;
 import com.gelerion.open.storage.local.domain.LocalStorageDirectory;
 import com.gelerion.open.storage.local.domain.LocalStorageFile;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -17,13 +16,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 import static java.util.Comparator.reverseOrder;
 import static java.util.function.Function.identity;
-import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
     private final Storage storage = LocalStorage.newLocalStorage();
@@ -53,12 +55,11 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
     }
 
     @Test
-    public void directlyCreateNewFileInsideNonExistingDirectory() {
+    public void createNewFileInsideNonExistingDirectoryUsingStorageFile() {
         String dir = "abc";
-        dirsToDelete.add(dir);
         String fileName = "test.txt";
-        StorageFile locatedAtFile = createFile(Paths.get(dir, fileName));
-        storage.writer(locatedAtFile).write(Stream.of("Hello world!"));
+        StorageFile file = createFile(Paths.get(dir, fileName));
+        storage.writer(file).write(Stream.of("Hello world!"));
 
         Path created = Paths.get(dir, fileName);
         assertTrue(Files.exists(created));
@@ -75,11 +76,162 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
         assertIterableEquals(expected, content);
     }
 
+    @Test
+    public void writingToAlreadyExistingFileShouldOverrideContent() throws IOException {
+        String dir = "abc";
+        String fileName = "test.txt";
+        StorageFile file = createFile(Paths.get(dir, fileName));
+        storage.writer(file).write(Stream.of("Hello world!"));
+
+        Path created = Paths.get(dir, fileName);
+        assertTrue(Files.exists(created));
+
+        List<String> content = Files.readAllLines(created);
+        assertEquals(1, content.size());
+        assertTrue(content.contains("Hello world!"));
+
+        //file must be rewritten with new content
+        storage.writer(file).write(Stream.of("Mad world!"));
+        content = Files.readAllLines(created);
+        assertEquals(1, content.size());
+        assertTrue(content.contains("Mad world!"));
+    }
+
+    @Test
+    public void appendingToNotExistingFileShouldCreateNewFileAndWriteContent() throws IOException {
+        String dir = "abc";
+        String fileName = "test.txt";
+        StorageFile file = createFile(Paths.get(dir, fileName));
+        storage.writer(file).append(Stream.of("Hello world!"));
+
+        Path created = Paths.get(dir, fileName);
+        assertTrue(Files.exists(created));
+        List<String> content = Files.readAllLines(created);
+        assertEquals(1, content.size());
+        assertTrue(content.contains("Hello world!"));
+    }
+
+    @Test
+    public void appendingToAlreadyExistingFileShouldNotWipePreviousContent() throws IOException {
+        String dir = "abc";
+        String fileName = "test.txt";
+        StorageFile file = createFile(Paths.get(dir, fileName));
+        storage.writer(file).write(Stream.of("Hello world!"));
+
+        Path created = Paths.get(dir, fileName);
+        assertTrue(Files.exists(created));
+
+        List<String> content = Files.readAllLines(created);
+        assertEquals(1, content.size());
+        assertTrue(content.contains("Hello world!"));
+
+        storage.writer(file).append(Stream.of("Mad world!"));
+        content = Files.readAllLines(created);
+        assertEquals(2, content.size());
+
+        ArrayList<String> expected = new ArrayList<>();
+        expected.add("Hello world!");
+        expected.add("Mad world!");
+        assertIterableEquals(expected, content);
+    }
+
+    @Test
+    public void deleteDirectory() {
+        String abcDir = "abc";
+        String xyzDir = "xyz";
+
+        StorageFile test = LocalStorageFile.get(abcDir + "/test.txt");
+        StorageFile example = LocalStorageFile.get(Paths.get(abcDir, "example.txt"));
+        StorageFile foggy = LocalStorageFile.get(xyzDir + "/foggy.txt");
+
+        storage.writer(test).write(Stream.of("Hello test world!"));
+        storage.writer(example).write(Stream.of("Hello example world!"));
+        storage.writer(foggy).write(Stream.of("Hello foggy world!"));
+
+        //whole storage
+        StorageDirectory abcDirPath = test.parentDir();
+        storage.delete(abcDirPath);
+
+        assertFalse(Files.exists(Paths.get(abcDirPath.toString())));
+    }
+
+    @Test
+    public void deletingNotExistingFileShotNotThrowException() {
+        String fileName = "abc.txt";
+        storage.delete(LocalStorageFile.get(fileName));
+        Path created = Paths.get(fileName);
+        assertFalse(Files.exists(created));
+    }
+
+    @Test
+    public void checkFileExist() {
+        String fileName = "test.txt";
+        StorageFile test = createFile(fileName);
+
+        storage.writer(test).write(Stream.of("Hello world!"));
+
+        Path created = Paths.get(fileName);
+        assertTrue(Files.exists(created));
+        assertTrue(storage.exists(test));
+
+        String nonExistingFile = "nonExist.txt";
+        Path notCreated = Paths.get(nonExistingFile);
+        assertFalse(Files.exists(notCreated));
+        assertFalse(storage.exists(LocalStorageFile.get(nonExistingFile)));
+    }
+
+    @Test
+    public void checkDirExist() {
+        String fileName = "test.txt";
+        String dirName = "abc";
+        StorageFile file = createFile(Paths.get(dirName, fileName));
+        storage.writer(file).write(Stream.of("Hello world!"));
+
+        assertTrue(storage.exists(file.parentDir()));
+    }
+
+    @Test
+    public void checkDirSize() throws IOException {
+        String fileName = "test.txt";
+        String abcDir = "abc";
+        StorageFile test = createFile(fileName);
+        StorageFile example = createFile(Paths.get(abcDir, "example.txt"));
+
+        storage.writer(example).write(Stream.of("Hello example world!"));
+        storage.writer(test).write(Stream.of("Hello world!"));
+
+        Path parentDir = Paths.get(test.parentDir().toString());
+        assertEquals(computeSize(parentDir), storage.size(test.parentDir()));
+
+        Path filePath = Paths.get(fileName);
+        assertEquals(Files.size(filePath), storage.size(test));
+    }
+
+    @Test
+    public void listFiles() {
+        StorageFile test = createFile("abc/test.txt");
+        StorageFile example = createFile("abc/example.txt");
+        StorageFile example2 = createFile("abc/xyz/example2.txt");
+
+        storage.writer(test).write(Stream.of("Hello world!"));
+        storage.writer(example).write(Stream.of("Hello world!"));
+        storage.writer(example2).write(Stream.of("Hello world!"));
+
+        Set<StorageFile> files = storage.files(LocalStorageDirectory.get(Paths.get("abc")));
+        assertEquals(files.size(), 2);
+        Set<String> fileNames = files.stream().map(StorageFile::fileName).collect(toSet());
+        assertTrue(fileNames.contains("test.txt"));
+    }
+
     private StorageFile createFile(String path) {
         return createFile(Paths.get(path));
     }
 
     private StorageFile createFile(Path path) {
+        int elements = path.getNameCount();
+        if (elements > 1) {
+            addDirsToDelete(path.getParent());
+        }
         filesToDelete.add(path);
         return LocalStorageFile.get(path);
     }
@@ -87,6 +239,12 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
     private StorageDirectory createDir(String path) {
         dirsToDelete.add(path);
         return LocalStorageDirectory.get(path);
+    }
+
+    private void addDirsToDelete(Path path) {
+        if (path == null) return;
+        dirsToDelete.add(path.getFileName().toString());
+        addDirsToDelete(path.getParent());
     }
 
     @AfterEach
@@ -113,5 +271,16 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
                     .map(Path::toFile)
                     .forEach(File::delete);
         }
+    }
+
+    private long computeSize(Path storage) throws IOException {
+        long result = 0;
+        Predicate<Path> isDirectory = Files::isDirectory;
+        //flatMap() is the only operation that internally closes the stream after its done
+        List<Path> files = Stream.of(Files.walk(storage)).flatMap(identity()).filter(isDirectory.negate()).collect(toList());
+        for (Path file : files) {
+            result += Files.size(file);
+        }
+        return result;
     }
 }

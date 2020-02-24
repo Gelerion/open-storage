@@ -1,7 +1,7 @@
 package com.gelerion.open.storage.local.domain;
 
 import com.gelerion.open.storage.api.domain.StorageDirectory;
-import com.gelerion.open.storage.api.domain.StorageFile;
+import com.gelerion.open.storage.api.domain.StoragePath;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -60,26 +60,26 @@ public class LocalStorageDirectory extends LocalStoragePath implements StorageDi
 //        return currentPath.startsWith(that.asString());
 //    }
 //
-//    public StorageFile resolve(StorageFile file) {
-//        Path resolved = doResolve(file);
-//        return LocalStorageFile.locatedAt(resolved);
-//    }
-//
-//    public StorageFolder resolve(StorageFolder folder) {
-//        Path resolved = doResolve(folder);
-//        return LocalStorageFolder.wrap(resolved);
-//    }
+    public LocalStorageFile resolve(LocalStorageFile file) {
+        Path resolved = doResolve(file);
+        return LocalStorageFile.get(resolved);
+    }
+
+    public LocalStorageDirectory resolve(LocalStorageDirectory dir) {
+        Path resolved = doResolve(dir);
+        return LocalStorageDirectory.get(resolved);
+    }
 //
 //    @Override
 //    public String toString() {
 //        return asString();
 //    }
 //
-//    private Path doResolve(StoragePath thatPath) {
-//        if (thatPath.unwrap(Path.class).startsWith(currentPath)) {
-//            Path normalizedPath = currentPath.relativize(thatPath.unwrap(Path.class));
-//            return currentPath.resolve(normalizedPath).normalize().toAbsolutePath();
-//        }
-//        return currentPath.resolve(thatPath.asString()).toAbsolutePath();
-//    }
+    private Path doResolve(StoragePath otherPath) {
+        if (otherPath.unwrap(Path.class).startsWith(currentPath)) {
+            Path normalizedPath = currentPath.relativize(otherPath.unwrap(Path.class));
+            return currentPath.resolve(normalizedPath).normalize().toAbsolutePath();
+        }
+        return currentPath.resolve(otherPath.toString()).toAbsolutePath();
+    }
 }

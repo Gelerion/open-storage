@@ -18,4 +18,21 @@ public class LocalStorageFile extends LocalStoragePath implements StorageFile {
     private LocalStorageFile(Path path) {
         super(path);
     }
+
+    @Override
+    public LocalStorageFile resolve(LocalStorageFile file) {
+        Path resolved = currentPath.resolve(file.asString());
+        return LocalStorageFile.get(resolved);
+    }
+
+    @Override
+    public LocalStorageDirectory resolve(LocalStorageDirectory folder) {
+        Path resolved = currentPath.resolve(folder.asString());
+        return LocalStorageDirectory.get(resolved);
+    }
+
+    @Override
+    public String fileName() {
+        return currentPath.getFileName().toString();
+    }
 }

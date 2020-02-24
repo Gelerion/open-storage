@@ -1,11 +1,12 @@
 package com.gelerion.open.storage.local;
 
 import com.gelerion.open.storage.api.Storage;
-import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
+import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
 import com.gelerion.open.storage.api.reader.StorageReader;
 import com.gelerion.open.storage.api.writer.StorageWriter;
+import com.gelerion.open.storage.local.domain.LocalStorageFile;
 import com.gelerion.open.storage.local.reader.LocalStorageReader;
 import com.gelerion.open.storage.local.writer.LocalStorageWriter;
 import org.slf4j.Logger;
@@ -13,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.lang.invoke.MethodHandles;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 import static com.gelerion.open.storage.api.ops.StorageOperations.*;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Collections.reverseOrder;
+import static java.util.stream.Collectors.toSet;
 
 public class LocalStorage implements Storage {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -32,9 +33,9 @@ public class LocalStorage implements Storage {
     }
 
     @Override
-    public Storage create(StorageDirectory folder) {
+    public Storage create(StorageDirectory dir) {
         return exec(() -> {
-            Path path = folder.unwrap(Path.class);
+            Path path = dir.unwrap(Path.class);
             if (!Files.exists(path)) Files.createDirectories(path);
             return this;
         });
@@ -42,9 +43,9 @@ public class LocalStorage implements Storage {
 
     @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void delete(StorageDirectory folder) {
+    public void delete(StorageDirectory dir) {
         run(() -> {
-            Path path = unwrapped(folder);
+            Path path = unwrapped(dir);
 
             //TODO: handle delete false
             Files.walk(path)
@@ -61,10 +62,10 @@ public class LocalStorage implements Storage {
     }
 
     @Override
-    public long size(StorageDirectory folder) {
+    public long size(StorageDirectory dir) {
         return exec(() -> {
             Predicate<Path> isDirectory = Files::isDirectory;
-            return Files.walk(unwrapped(folder))
+            return Files.walk(unwrapped(dir))
                     .filter(isDirectory.negate())
                     .mapToLong(path -> execOpt(() -> Files.size(path)).orElse(0))
                     .sum();
@@ -104,14 +105,24 @@ public class LocalStorage implements Storage {
         });
     }
 
-    @Override
-    public void copy(StoragePath source, StoragePath target) {
+//    @Override
+//    public void copy(StoragePath source, StoragePath target) {
+//
+//    }
 
-    }
-
     @Override
-    public Set<StorageFile> files(StorageDirectory underFolder) {
-        return null;
+    public Set<StorageFile> files(StorageDirectory underDir) {
+        Path resolved = underDir.unwrap(Path.class);
+        Predicate<Path> isDirectory = Files::isDirectory;
+
+        return exec(() -> {
+            //Try with resources is mandatory here, do not remove it!
+            try (Stream<Path> stream = Files.list(resolved)) {
+                return stream.filter(isDirectory.negate())
+                        .map(LocalStorageFile::get)
+                        .collect(toSet());
+            }
+        });
     }
 
     @Override

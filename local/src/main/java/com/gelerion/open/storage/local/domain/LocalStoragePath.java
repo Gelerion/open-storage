@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.Objects;
 
 public abstract class LocalStoragePath implements StoragePath {
+    static final Path ROOT = Paths.get("").toAbsolutePath().getRoot();
     final Path currentPath;
 
     protected LocalStoragePath(Path path) {
@@ -24,6 +25,24 @@ public abstract class LocalStoragePath implements StoragePath {
         throw new StorageOperationException("Unwrapping wrong instance");
     }
 
+    @Override
+    public LocalStorageDirectory parentDir() {
+        return currentPath.getParent() != null ?
+                LocalStorageDirectory.get(currentPath.getParent()) : absolutePathParent();
+    }
+
+    @Override
+    public StoragePath resolve(StoragePath other) {
+        if (other instanceof LocalStorageFile)
+            return resolve((LocalStorageFile) other);
+        else if(other instanceof LocalStorageDirectory)
+            return resolve((LocalStorageDirectory) other);
+        throw new StorageOperationException("StoragePath must be either LocalStorageFile or LocalStorageFolder");
+    }
+
+    public abstract LocalStorageFile resolve(LocalStorageFile file);
+
+    public abstract LocalStorageDirectory resolve(LocalStorageDirectory folder);
 
     public String asString() {
         return currentPath.toString();
@@ -50,5 +69,18 @@ public abstract class LocalStoragePath implements StoragePath {
     @Override
     public int hashCode() {
         return Objects.hash(currentPath);
+    }
+
+    private LocalStorageDirectory absolutePathParent() {
+        if (isRoot()) {
+            return LocalStorageDirectory.get(ROOT);
+        }
+
+        Path parent = currentPath.toAbsolutePath().getParent();
+        return LocalStorageDirectory.get(parent);
+    }
+
+    private boolean isRoot() {
+        return currentPath.toAbsolutePath().equals(ROOT);
     }
 }

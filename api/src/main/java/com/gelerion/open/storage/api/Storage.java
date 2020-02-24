@@ -1,12 +1,11 @@
 package com.gelerion.open.storage.api;
 
-import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
+import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
 import com.gelerion.open.storage.api.reader.StorageReader;
 import com.gelerion.open.storage.api.writer.StorageWriter;
 
-import java.net.URL;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -47,7 +46,7 @@ public interface Storage {
 
     void rename(StorageFile source, StorageFile target);
 
-    void copy(StoragePath source, StoragePath target);
+//    void copy(StoragePath source, StoragePath target);
 
 //    SourcePath copy();
 
@@ -55,7 +54,7 @@ public interface Storage {
     /**
      * set of files under specific folder, nested folders aren't taken into account
      */
-    Set<StorageFile> files(StorageDirectory underFolder);
+    Set<StorageFile> files(StorageDirectory underDir);
 
     //<R> R files(Function<Stream<StorageFile>, R> func);
 
