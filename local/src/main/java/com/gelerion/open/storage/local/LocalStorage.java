@@ -6,6 +6,7 @@ import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
 import com.gelerion.open.storage.api.reader.StorageReader;
 import com.gelerion.open.storage.api.writer.StorageWriter;
+import com.gelerion.open.storage.local.domain.LocalStorageDirectory;
 import com.gelerion.open.storage.local.domain.LocalStorageFile;
 import com.gelerion.open.storage.local.reader.LocalStorageReader;
 import com.gelerion.open.storage.local.writer.LocalStorageWriter;
@@ -126,8 +127,13 @@ public class LocalStorage implements Storage {
     }
 
     @Override
-    public Stream<StorageDirectory> subFolders(StorageDirectory base) {
-        return null;
+    public Set<StorageDirectory> dirs(StorageDirectory underDir) {
+        return exec(() -> Files
+                .walk(underDir.unwrap(Path.class))
+                .filter(Files::isDirectory)
+                .skip(1)
+                .map(LocalStorageDirectory::get)
+                .collect(toSet()));
     }
 
     @Override

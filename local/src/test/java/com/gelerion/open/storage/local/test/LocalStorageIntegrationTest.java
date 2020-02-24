@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -221,6 +222,73 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
         assertEquals(files.size(), 2);
         Set<String> fileNames = files.stream().map(StorageFile::fileName).collect(toSet());
         assertTrue(fileNames.contains("test.txt"));
+    }
+
+    @Test
+    public void listDirs() {
+        String abcDir = "abc";
+        String xyzFolder = "xyz";
+        StorageFile test = createFile(abcDir + "/test.txt");
+        StorageFile example = createFile(abcDir + "/example.txt");
+        StorageFile example2 = createFile(abcDir + "/" + xyzFolder + "/example2.txt");
+
+        storage.writer(test).write(Stream.of("Hello test world!"));
+        storage.writer(example).write(Stream.of("Hello example world!"));
+        storage.writer(example2).write(Stream.of("Hello example2 world!"));
+
+        String qweDir = "qwe";
+        String ertDir = "ert";
+        String ghFolder = "gh";
+        storage.create(LocalStorageDirectory.get(Paths.get(abcDir + "/" + qweDir)));
+        storage.create(LocalStorageDirectory.get(Paths.get(abcDir + "/" + qweDir + "/" + ertDir)));
+        LocalStorageDirectory folder = LocalStorageDirectory.get(abcDir, ghFolder);
+        LocalStorageDirectory ert = folder.addSubDirectory(ertDir);
+        storage.create(ert);
+
+        //storage layout:
+        //  -abc
+        //      -xyz
+        //      -qwe
+        //          -ert
+        //      -gh
+        //          -ert
+        Set<String> expectedLayout = new HashSet<>();
+        expectedLayout.add("abc/xyz");
+        expectedLayout.add("abc/qwe");
+        expectedLayout.add("abc/qwe/ert");
+        expectedLayout.add("abc/gh");
+        expectedLayout.add("abc/gh/ert");
+
+        Set<String> actual = storage.dirs(LocalStorageDirectory.get(abcDir)).stream().map(Object::toString).collect(toSet());
+        assertIterableEquals(expectedLayout, actual);
+    }
+
+    @Test
+    public void renameDir() {
+        String srcDirName = "source";
+        String dstDirName = "target";
+        StorageDirectory current = createDir(srcDirName);
+        StorageDirectory renamed = createDir(dstDirName);
+        storage.create(current);
+
+        storage.rename(current, renamed);
+        assertFalse(Files.exists(Paths.get(srcDirName)));
+        assertTrue(Files.exists(Paths.get(dstDirName)));
+    }
+
+    @Test
+    public void renameFile() {
+        String dir = "dir";
+        String srcFileName = "source.txt";
+        String dstFileName = "target.txt";
+        StorageFile current = LocalStorageFile.get(Paths.get(dir, srcFileName));
+        StorageFile renamed = LocalStorageFile.get(dstFileName);
+        createFile(Paths.get(dir, dstFileName)); //schedule deletion after test
+        storage.writer(current).write("1");
+
+        storage.rename(current, renamed);
+        assertFalse(Files.exists(Paths.get(dir, srcFileName)));
+        assertTrue(Files.exists(Paths.get(dir, dstFileName)));
     }
 
     private StorageFile createFile(String path) {

@@ -7,7 +7,6 @@ import com.gelerion.open.storage.api.reader.StorageReader;
 import com.gelerion.open.storage.api.writer.StorageWriter;
 
 import java.util.Set;
-import java.util.stream.Stream;
 
 public interface Storage {
     Storage create(StorageDirectory folder);
@@ -52,13 +51,12 @@ public interface Storage {
 
     //TODO: predicate pushdown
     /**
-     * set of files under specific folder, nested folders aren't taken into account
+     * set of files under specific directory, nested dirs aren't taken into account
      */
     Set<StorageFile> files(StorageDirectory underDir);
-
     //<R> R files(Function<Stream<StorageFile>, R> func);
 
-    Stream<StorageDirectory> subFolders(StorageDirectory base);
+    Set<StorageDirectory> dirs(StorageDirectory underDir);
 
     StorageDirectory fullPath(StorageDirectory folder);
 

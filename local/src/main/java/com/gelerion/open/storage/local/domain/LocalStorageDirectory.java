@@ -29,7 +29,12 @@ public class LocalStorageDirectory extends LocalStoragePath implements StorageDi
         return LocalStorageFile.get(currentPath.resolve(fileName));
     }
 
-//    @Override
+    @Override
+    public LocalStorageDirectory addSubDirectory(String dir) {
+        return get(currentPath.toString(), dir);
+    }
+
+    //    @Override
 //    public LocalStorageDirectory addSubFolder(String folderName) {
 //        return folder(currentPath.toString(), folderName);
 //    }
