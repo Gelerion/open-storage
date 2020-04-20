@@ -49,6 +49,8 @@ public interface Storage {
 
 //    SourcePath copy();
 
+//    Stream<StoragePath> glob(StoragePath path)
+
     //TODO: predicate pushdown
     /**
      * set of files under specific directory, nested dirs aren't taken into account
