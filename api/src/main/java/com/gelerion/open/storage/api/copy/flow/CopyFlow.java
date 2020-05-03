@@ -9,17 +9,16 @@ import com.gelerion.open.storage.api.domain.StoragePath;
 import java.util.Collection;
 import java.util.stream.Stream;
 
-public class CopyFlow {
+public class CopyFlow implements CopySource, CopyTarget {
 
-    public CopyFlow source(StoragePath src) {
-        return this;
+
+    @Override
+    public CopyTarget source(Storage storage, StoragePath path) {
+        return null;
     }
 
-    public CopyTask target(StoragePath dst) {
-        return new CopyTaskImpl(this);
+    @Override
+    public CopyTask target(Storage storage, StoragePath path) {
+        return null;
     }
-
-
-
-
 }
