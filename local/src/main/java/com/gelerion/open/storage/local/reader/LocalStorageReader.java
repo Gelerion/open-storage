@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
@@ -14,6 +15,8 @@ import java.nio.file.Path;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import java.util.zip.GZIPInputStream;
+
+import static com.gelerion.open.storage.api.ops.StorageOperations.exec;
 
 public class LocalStorageReader extends StorageReaderSkeleton {
     protected static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -50,6 +53,14 @@ public class LocalStorageReader extends StorageReaderSkeleton {
     }
 
     @Override
+    public InputStream stream() {
+        return exec(() -> { // what about directory?
+            InputStream result = Files.newInputStream(path);
+            return isZipped ? new GZIPInputStream(result) : result;
+        });
+    }
+
+    @Override
     protected void close() {
         //nothing to close
     }
@@ -58,7 +69,7 @@ public class LocalStorageReader extends StorageReaderSkeleton {
         try {
             //we could check an actual type with Files.probeContentType(path)
             //but lets do it in easy way :)
-            if (isZipped) {
+            if (isZipped) { //handle different codecs
                 BufferedReader br = new BufferedReader(new InputStreamReader(
                         new GZIPInputStream(Files.newInputStream(path)), charset));
                 return br.lines().onClose(asUncheckedRunnable(br));

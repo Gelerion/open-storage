@@ -15,7 +15,8 @@ public interface CopySource {
 
     static CopySource glob(String pattern) {
         //TODO: check not blank
-        return new Glob(pattern);
+        //return new Glob(pattern);
+        return null;
     }
 
     static CopySource file(StorageFile file) {
@@ -24,6 +25,8 @@ public interface CopySource {
 
     static CopySource dir(StorageDirectory dir) {
         //storage.files(dir)
+        return null;
+
     }
 }
 

@@ -1,30 +1,17 @@
 package com.gelerion.open.storage.api.copy;
 
-import com.gelerion.open.storage.api.copy.flow.CopyFlow;
-import com.gelerion.open.storage.api.domain.StoragePath;
-
 public interface CopyTask {
 
-    static CopyFlow newCopyTask() {
-        return new CopyFlow();
-    }
-
-    CopyTask options();
-
     /**
-     * The defaults for convention over configuration are:
-     *  1. replace existing file
-     *  2. source file(s)/dir(s) stays untouched
-     *  3. doesn't visit directories recursively
+     * Default behaviour:
+     *  1. If file already exists - replace
+     *  2. Source file(s)/dir(s) are unaffected
+     *  3. In case source path is a directory, all sub directories wont be taken into account
      */
     void copy();
 
-    // non blocking call, copied internally sometime in the future
+    /**
+     * non blocking call, managed internally in common thread pool
+     */
     //CopyTaskFuture addToCopyQueue();
-
-//    CopyTask source(StoragePath src);
-//
-//    CopyTask target(StoragePath dst);
-
-
 }

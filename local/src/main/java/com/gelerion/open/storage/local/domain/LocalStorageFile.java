@@ -35,4 +35,10 @@ public class LocalStorageFile extends LocalStoragePath implements StorageFile {
     public String fileName() {
         return currentPath.getFileName().toString();
     }
+
+    //TODO: optimize?
+    @Override
+    public StorageFile rename(String newName) {
+        return LocalStorageFile.get(currentPath).parentDir().toStorageFile(newName);
+    }
 }

@@ -34,6 +34,11 @@ public class LocalStorage implements Storage {
     }
 
     @Override
+    public String name() {
+        return "local";
+    }
+
+    @Override
     public Storage create(StorageDirectory dir) {
         return exec(() -> {
             Path path = dir.unwrap(Path.class);
@@ -94,16 +99,22 @@ public class LocalStorage implements Storage {
     }
 
     @Override
-    public void rename(StorageDirectory source, StorageDirectory target) {
-        run(() -> Files.move(unwrapped(source), unwrapped(target), REPLACE_EXISTING));
+    public StorageFile rename(StorageDirectory source, StorageDirectory target) {
+        return exec(() -> LocalStorageFile.get(Files.move(unwrapped(source), unwrapped(target), REPLACE_EXISTING)));
     }
 
     @Override
-    public void rename(StorageFile source, StorageFile target) {
-        run(() -> {
+    public StorageFile rename(StorageFile source, StorageFile target) {
+        return exec(() -> {
             Path src = unwrapped(source);
-            Files.move(src, src.resolveSibling(unwrapped(target)), REPLACE_EXISTING);
+            Path tgt = Files.move(src, src.resolveSibling(unwrapped(target)), REPLACE_EXISTING);
+            return LocalStorageFile.get(tgt);
         });
+    }
+
+    @Override
+    public void copy(StoragePath source, StoragePath target) {
+//        Files.copy()
     }
 
 //    @Override

@@ -1,10 +1,17 @@
 package com.gelerion.open.storage.test;
 
-import com.gelerion.open.storage.api.copy.CopyTask;
+import com.gelerion.open.storage.api.Storage;
+import com.gelerion.open.storage.api.copy.CopyTasks;
+import com.gelerion.open.storage.api.copy.flow.FromSpec;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
+import com.gelerion.open.storage.api.reader.StorageReader;
+import com.gelerion.open.storage.api.writer.StorageWriter;
 import org.junit.jupiter.api.Test;
+
+import java.util.Set;
+
 
 public class CopyTaskTest {
 
@@ -20,39 +27,22 @@ public class CopyTaskTest {
         //is handled for you by the library.
         //Following convention over configuration approach reasonable defaults were chosen, tough they are fully configurable.
 
-        CopyTask.newCopyTask()
-                .source(mockStorageFile)
-                .target(mockStorageFile)
-                .copy();
+//        CopyTasks.newCopyTask()
+//                .from(FromSpec.file().map((storage, file) -> ))
+//                .target()
+//                .withSourceListener()
+
+//        CopyTasks.newCopyTask()
+//                .from(file(mockStorageFile)
+//                        .map((st, f) -> st.rename(f, f.rename("new-name")))
+//                        .filter(src -> src.fileName().startsWith("abc")));
+
+        //.source(path(storageFile).withListener((storage, file) -> log.info(file)))
+//        CopyTasks.newCopyTask()
+//                //.source(s3, file)
+//                .from(mockStorage, mockStorageFile)
+//                .to(mockStorage, mockStorageFile)
+//                .copy();
     }
 
-
-
-
-    private final StorageFile mockStorageFile = new StorageFile() {
-        @Override
-        public int compareTo(StoragePath o) {
-            return 0;
-        }
-
-        @Override
-        public <X> X unwrap(Class<X> clazz) {
-            return null;
-        }
-
-        @Override
-        public StorageDirectory parentDir() {
-            return null;
-        }
-
-        @Override
-        public StoragePath resolve(StoragePath other) {
-            return null;
-        }
-
-        @Override
-        public String fileName() {
-            return null;
-        }
-    };
 }

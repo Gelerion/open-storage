@@ -9,6 +9,8 @@ import com.gelerion.open.storage.api.writer.StorageWriter;
 import java.util.Set;
 
 public interface Storage {
+    String name();
+
     Storage create(StorageDirectory folder);
 
     void delete(StorageDirectory folder);
@@ -41,11 +43,12 @@ public interface Storage {
 
     boolean exists(StoragePath path);
 
-    void rename(StorageDirectory source, StorageDirectory target);
+    //retrun renamed file
+    StorageFile rename(StorageDirectory source, StorageDirectory target);
 
-    void rename(StorageFile source, StorageFile target);
+    StorageFile rename(StorageFile source, StorageFile target);
 
-//    void copy(StoragePath source, StoragePath target);
+    void copy(StoragePath source, StoragePath target);
 
 //    SourcePath copy();
 
@@ -63,4 +66,7 @@ public interface Storage {
     StorageDirectory fullPath(StorageDirectory folder);
 
     StorageFile fullPath(StorageFile file);
+
+    //TODO:
+    //glob()
 }

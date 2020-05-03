@@ -1,5 +1,6 @@
 package com.gelerion.open.storage.api.reader;
 
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.function.Function;
@@ -42,6 +43,8 @@ public interface StorageReader {
      * e.g: try(Stream<String> stream = lazyRead()) {...}
      */
     Stream<String> lazyRead();
+
+    InputStream stream();
 
     default String readFully() {
         return read(joining(lineSeparator()));
