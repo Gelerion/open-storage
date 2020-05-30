@@ -277,6 +277,33 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
     }
 
     @Test
+    public void renameAndResolveDir() {
+        String srcDirName = "abc/source";
+        String dstDirName = "target";
+        StorageDirectory current = createDir(srcDirName);
+        StorageDirectory renamed = createDir(dstDirName);
+        storage.create(current);
+
+        storage.rename(current, renamed);
+        assertFalse(Files.exists(Paths.get(srcDirName)));
+        assertTrue(Files.exists(Paths.get("abc", dstDirName)));
+        dirsToDelete.add("abc");
+    }
+
+    @Test
+    public void renameAndResolveSubDir() {
+        String srcDirName = "abc/source";
+        String dstDirName = "abc/target";
+        StorageDirectory current = createDir(srcDirName);
+        StorageDirectory renamed = createDir(dstDirName);
+        storage.create(current);
+
+        storage.rename(current, renamed);
+        assertFalse(Files.exists(Paths.get(srcDirName)));
+        assertTrue(Files.exists(Paths.get(dstDirName)));
+    }
+
+    @Test
     public void renameFile() {
         String dir = "dir";
         String srcFileName = "source.txt";

@@ -100,16 +100,16 @@ public class LocalStorage implements Storage {
 
     @Override
     public StorageFile rename(StorageDirectory source, StorageDirectory target) {
-        return exec(() -> LocalStorageFile.get(Files.move(unwrapped(source), unwrapped(target), REPLACE_EXISTING)));
+        return exec(() ->
+//                LocalStorageFile.get(Files.move(unwrapped(source), unwrapped(target), REPLACE_EXISTING)));
+                LocalStorageFile.get(Files.move(unwrapped(source), unwrapped(source.parentDir().resolve(target)), REPLACE_EXISTING))
+        );
     }
 
     @Override
     public StorageFile rename(StorageFile source, StorageFile target) {
-        return exec(() -> {
-            Path src = unwrapped(source);
-            Path tgt = Files.move(src, src.resolveSibling(unwrapped(target)), REPLACE_EXISTING);
-            return LocalStorageFile.get(tgt);
-        });
+        return exec(() ->
+                LocalStorageFile.get(Files.move(unwrapped(source), unwrapped(source.resolve(target)), REPLACE_EXISTING)));
     }
 
     @Override

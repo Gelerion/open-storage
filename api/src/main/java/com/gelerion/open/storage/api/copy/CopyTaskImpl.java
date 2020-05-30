@@ -51,7 +51,9 @@ public class CopyTaskImpl implements CopyTask {
                 StorageDirectory dir = sink.dir();
                 run(() -> {
                     final Path srcPath = srcFile.unwrap(Path.class);
-                    Files.copy(srcPath, dir.unwrap(Path.class).resolve(srcPath.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+                    final Path newDir = dir.unwrap(Path.class);
+                    Files.createDirectories(newDir);
+                    Files.copy(srcPath, newDir.resolve(srcPath.getFileName()), StandardCopyOption.REPLACE_EXISTING);
                 });
             });
         }
