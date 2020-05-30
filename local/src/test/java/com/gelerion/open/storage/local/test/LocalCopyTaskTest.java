@@ -1,9 +1,6 @@
 package com.gelerion.open.storage.local.test;
 
 import com.gelerion.open.storage.api.Storage;
-import com.gelerion.open.storage.api.copy.CopyTask;
-import com.gelerion.open.storage.api.copy.CopyTasks;
-import com.gelerion.open.storage.api.copy.flow.FromSpec;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.local.LocalStorage;
@@ -41,11 +38,23 @@ public class LocalCopyTaskTest {
 
 
         StorageDirectory tgtDir = createDir("abc/efg");
-        CopyTasks.newCopyTask(storage)
-                .from(FromSpec.file(file)
-                        .map((st, f) -> storage.rename(f, f.rename("1test.txt"))))
-                .to(tgtDir)
-                .copy();
+
+        //from: abc/text.txt
+        //to:   abc/efg
+        //result: abc/efg/test.txt
+        storage.copy().from(file).to(tgtDir).execute();
+
+/*        CopyTasks.newCopyTask(storage)
+                .from(FromSpec.path(file)
+                        .map((st, f) -> storage.rename(f, f.rename("1test.txt")))
+                        .map((st, f) -> {
+                            System.out.println("copy from " + f);
+                            return f;
+                        })
+                )
+//                .to(tgtDir)
+                .to(ToSpec.dir(tgtDir))
+                .copy();*/
 
         assertTrue(Files.exists(tgtDir.toStorageFile(fileName).unwrap(Path.class)));
 //        storage.hashCode()

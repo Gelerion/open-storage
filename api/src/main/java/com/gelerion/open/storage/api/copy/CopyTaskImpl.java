@@ -4,6 +4,7 @@ import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.copy.flow.CopyFlow;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
+import com.gelerion.open.storage.api.domain.StoragePath;
 import com.gelerion.open.storage.api.ops.StorageOperations;
 
 import java.nio.file.CopyOption;
@@ -23,7 +24,7 @@ public class CopyTaskImpl implements CopyTask {
     }
 
     @Override
-    public void copy() {
+    public void execute() {
 /*        Storage srcStorage = source.storage();
         Storage tgtStorage = target.storage();
 
@@ -41,6 +42,7 @@ public class CopyTaskImpl implements CopyTask {
         Storage tgtStorage = sink.storage();
 
         //TODO: different CopyTask implementations
+        //TODO: remove existing
         //e.g. Same src and target storage -> should be done with native fs api
         //copy between storages require usage readers/writers api
 
@@ -48,13 +50,20 @@ public class CopyTaskImpl implements CopyTask {
             //push down to the native copy api
             source.files().forEach(srcFile -> {
 //                StorageFile tgtFile = sink.resolve(srcFile);
-                StorageDirectory dir = sink.dir();
                 run(() -> {
-                    final Path srcPath = srcFile.unwrap(Path.class);
-                    final Path newDir = dir.unwrap(Path.class);
-                    Files.createDirectories(newDir);
-                    Files.copy(srcPath, newDir.resolve(srcPath.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+                    StorageDirectory dir = sink.dir();
+                    StorageFile tgtFile = dir.toStorageFile(srcFile.fileName());
+
+                    Files.createDirectories(tgtFile.parentDir().unwrap(Path.class));
+                    srcStorage.move(srcFile, tgtFile);
                 });
+
+//                run(() -> {
+//                    final Path srcPath = srcFile.unwrap(Path.class);
+//                    final Path newDir = dir.unwrap(Path.class);
+//                    Files.createDirectories(newDir);
+//                    Files.copy(srcPath, newDir.resolve(srcPath.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+//                });
             });
         }
 

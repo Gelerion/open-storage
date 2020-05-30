@@ -1,6 +1,8 @@
 package com.gelerion.open.storage.local;
 
 import com.gelerion.open.storage.api.Storage;
+import com.gelerion.open.storage.api.copy.CopyTask;
+import com.gelerion.open.storage.api.copy.flow.CopyFrom;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
@@ -99,22 +101,30 @@ public class LocalStorage implements Storage {
     }
 
     @Override
-    public StorageFile rename(StorageDirectory source, StorageDirectory target) {
+    public StorageFile move(StorageDirectory source, StorageDirectory target) {
         return exec(() ->
-//                LocalStorageFile.get(Files.move(unwrapped(source), unwrapped(target), REPLACE_EXISTING)));
-                LocalStorageFile.get(Files.move(unwrapped(source), unwrapped(source.parentDir().resolve(target)), REPLACE_EXISTING))
+                LocalStorageFile.get(Files.move(
+                        unwrapped(source),
+                        unwrapped(source.parentDir().resolve(target)), REPLACE_EXISTING))
         );
     }
 
     @Override
-    public StorageFile rename(StorageFile source, StorageFile target) {
+    public StorageFile move(StorageFile source, StorageFile target) {
         return exec(() ->
-                LocalStorageFile.get(Files.move(unwrapped(source), unwrapped(source.resolve(target)), REPLACE_EXISTING)));
+                LocalStorageFile.get(Files.move(
+                        unwrapped(source),
+                        unwrapped(source.resolve(target)), REPLACE_EXISTING)));
     }
 
     @Override
     public void copy(StoragePath source, StoragePath target) {
 //        Files.copy()
+    }
+
+    @Override
+    public CopyFrom copy() {
+        return CopyTask.newCopyTask(this);
     }
 
 //    @Override

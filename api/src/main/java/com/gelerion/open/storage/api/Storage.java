@@ -1,5 +1,6 @@
 package com.gelerion.open.storage.api;
 
+import com.gelerion.open.storage.api.copy.flow.CopyFrom;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
@@ -43,14 +44,13 @@ public interface Storage {
 
     boolean exists(StoragePath path);
 
-    //retrun renamed file
-    StorageFile rename(StorageDirectory source, StorageDirectory target);
+    StorageFile move(StorageDirectory source, StorageDirectory target);
 
-    StorageFile rename(StorageFile source, StorageFile target);
+    StorageFile move(StorageFile source, StorageFile target);
 
     void copy(StoragePath source, StoragePath target);
 
-//    SourcePath copy();
+    CopyFrom copy();
 
 //    Stream<StoragePath> glob(StoragePath path)
 

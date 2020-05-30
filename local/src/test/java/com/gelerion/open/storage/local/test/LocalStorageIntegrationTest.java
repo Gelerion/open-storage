@@ -271,7 +271,7 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
         StorageDirectory renamed = createDir(dstDirName);
         storage.create(current);
 
-        storage.rename(current, renamed);
+        storage.move(current, renamed);
         assertFalse(Files.exists(Paths.get(srcDirName)));
         assertTrue(Files.exists(Paths.get(dstDirName)));
     }
@@ -284,10 +284,9 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
         StorageDirectory renamed = createDir(dstDirName);
         storage.create(current);
 
-        storage.rename(current, renamed);
+        storage.move(current, renamed);
         assertFalse(Files.exists(Paths.get(srcDirName)));
         assertTrue(Files.exists(Paths.get("abc", dstDirName)));
-        dirsToDelete.add("abc");
     }
 
     @Test
@@ -298,25 +297,70 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
         StorageDirectory renamed = createDir(dstDirName);
         storage.create(current);
 
-        storage.rename(current, renamed);
+        storage.move(current, renamed);
         assertFalse(Files.exists(Paths.get(srcDirName)));
         assertTrue(Files.exists(Paths.get(dstDirName)));
     }
+
+    //TODO: more understandable exception than NoSuchFileException: source -> /Users/denisshuvalov/Projects/Amazon/open-storage/local/abc/target
+/*    @Test
+    public void renameAndResolveNestedDstDirs() {
+        String srcDirName = "source";
+        String dstDirName = "abc/target";
+        StorageDirectory current = createDir(srcDirName);
+        StorageDirectory renamed = createDir(dstDirName);
+        storage.create(current);
+
+        storage.rename(current, renamed);
+        assertFalse(Files.exists(Paths.get(srcDirName)));
+        assertTrue(Files.exists(Paths.get(dstDirName)));
+    }*/
 
     @Test
     public void renameFile() {
         String dir = "dir";
         String srcFileName = "source.txt";
         String dstFileName = "target.txt";
-        StorageFile current = LocalStorageFile.get(Paths.get(dir, srcFileName));
-        StorageFile renamed = LocalStorageFile.get(dstFileName);
-        createFile(Paths.get(dir, dstFileName)); //schedule deletion after test
+        StorageFile current = LocalStorageFile.get(Paths.get(dir, srcFileName)); //dir/source.txt
+        StorageFile renamed = LocalStorageFile.get(dstFileName);                 //target.txt
+        createFile(Paths.get(dir, dstFileName)); //schedule deletion after the test
         storage.writer(current).write("1");
 
-        storage.rename(current, renamed);
+        storage.move(current, renamed); //dir/target.txt
         assertFalse(Files.exists(Paths.get(dir, srcFileName)));
         assertTrue(Files.exists(Paths.get(dir, dstFileName)));
     }
+
+    @Test
+    public void properlyRenameFileWithingSameDir() {
+        String dir = "dir";
+        String srcFileName = "source.txt";
+        String dstFileName = "target.txt";
+        StorageFile current = LocalStorageFile.get(Paths.get(dir, srcFileName)); //dir/source.txt
+        StorageFile renamed = LocalStorageFile.get(Paths.get(dir, dstFileName)); //dir/target.txt
+        createFile(Paths.get(dir, dstFileName)); //schedule deletion after the test
+        storage.writer(current).write("1");
+
+        storage.move(current, renamed); //dir/target.txt
+        assertFalse(Files.exists(Paths.get(dir, srcFileName)));
+        assertTrue(Files.exists(Paths.get(dir, dstFileName)));
+    }
+
+    //TODO: handle exception NoSuchFileException: source.txt -> /Users/denisshuvalov/Projects/Amazon/open-storage/local/dir/target.txt
+/*    @Test
+    public void renameAndCopyFile() {
+        String dir = "dir";
+        String srcFileName = "source.txt";
+        String dstFileName = "target.txt";
+        StorageFile current = LocalStorageFile.get(Paths.get(srcFileName));       //source.txt
+        StorageFile renamed = LocalStorageFile.get(Paths.get(dir, dstFileName));  //dir/target.txt
+        createFile(Paths.get(dir, dstFileName)); //schedule deletion after the test
+        storage.writer(current).write("1");
+
+        storage.rename(current, renamed); //dir/target.txt
+        assertFalse(Files.exists(Paths.get(srcFileName)));
+        assertTrue(Files.exists(Paths.get(dir, dstFileName)));
+    }*/
 
     private StorageFile createFile(String path) {
         return createFile(Paths.get(path));
@@ -332,7 +376,8 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
     }
 
     private StorageDirectory createDir(String path) {
-        dirsToDelete.add(path);
+        final String[] dirs = path.split("/");
+        dirsToDelete.add(dirs[0]); //adding root dir is enough
         return LocalStorageDirectory.get(path);
     }
 

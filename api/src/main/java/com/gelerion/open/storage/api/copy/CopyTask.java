@@ -1,6 +1,18 @@
 package com.gelerion.open.storage.api.copy;
 
+import com.gelerion.open.storage.api.Storage;
+import com.gelerion.open.storage.api.copy.flow.CopyFlow;
+import com.gelerion.open.storage.api.copy.flow.CopyFrom;
+
 public interface CopyTask {
+
+    static CopyFrom newCopyTask() {
+        return new CopyFlow();
+    }
+
+    static CopyFrom newCopyTask(Storage storage) {
+        return new CopyFlow(storage);
+    }
 
     /**
      * Default behaviour:
@@ -8,7 +20,7 @@ public interface CopyTask {
      *  2. Source file(s)/dir(s) are unaffected
      *  3. In case source path is a directory, all sub directories wont be taken into account
      */
-    void copy();
+    void execute();
 
     /**
      * non blocking call, managed internally in common thread pool

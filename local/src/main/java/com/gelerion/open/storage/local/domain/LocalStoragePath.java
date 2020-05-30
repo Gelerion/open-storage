@@ -1,5 +1,7 @@
 package com.gelerion.open.storage.local.domain;
 
+import com.gelerion.open.storage.api.domain.StorageDirectory;
+import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
 import com.gelerion.open.storage.api.exceptions.StorageOperationException;
 
@@ -40,9 +42,12 @@ public abstract class LocalStoragePath implements StoragePath {
         throw new StorageOperationException("StoragePath must be either LocalStorageFile or LocalStorageFolder");
     }
 
-    public abstract LocalStorageFile resolve(LocalStorageFile file);
 
-    public abstract LocalStorageDirectory resolve(LocalStorageDirectory folder);
+    @Override
+    public abstract LocalStorageFile resolve(StorageFile file);
+
+    @Override
+    public abstract LocalStorageDirectory resolve(StorageDirectory folder);
 
     public String asString() {
         return currentPath.toString();

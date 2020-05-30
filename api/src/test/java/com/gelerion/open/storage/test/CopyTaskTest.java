@@ -1,16 +1,6 @@
 package com.gelerion.open.storage.test;
 
-import com.gelerion.open.storage.api.Storage;
-import com.gelerion.open.storage.api.copy.CopyTasks;
-import com.gelerion.open.storage.api.copy.flow.FromSpec;
-import com.gelerion.open.storage.api.domain.StorageDirectory;
-import com.gelerion.open.storage.api.domain.StorageFile;
-import com.gelerion.open.storage.api.domain.StoragePath;
-import com.gelerion.open.storage.api.reader.StorageReader;
-import com.gelerion.open.storage.api.writer.StorageWriter;
 import org.junit.jupiter.api.Test;
-
-import java.util.Set;
 
 
 public class CopyTaskTest {

@@ -1,5 +1,6 @@
 package com.gelerion.open.storage.local.domain;
 
+import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 
 import java.nio.file.Path;
@@ -20,12 +21,12 @@ public class LocalStorageFile extends LocalStoragePath implements StorageFile {
     }
 
     @Override
-    public LocalStorageFile resolve(LocalStorageFile file) {
+    public LocalStorageFile resolve(StorageFile file) {
         return parentDir().resolve(file);
     }
 
     @Override
-    public LocalStorageDirectory resolve(LocalStorageDirectory dir) {
+    public LocalStorageDirectory resolve(StorageDirectory dir) {
         return parentDir().resolve(dir);
     }
 

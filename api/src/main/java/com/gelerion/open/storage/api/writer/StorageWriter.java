@@ -5,7 +5,7 @@ import java.util.stream.Stream;
 
 public interface StorageWriter {
     /**
-     * creates new or rewrites existing file
+     * creates new or rewrites the existing file
      */
     void write(Stream<String> content);
 
@@ -16,7 +16,7 @@ public interface StorageWriter {
     void write(byte[] content);
 
     /**
-     * creates new or appends to existing file
+     * creates new or appends to the existing file
      */
     void append(Stream<String> content);
 
