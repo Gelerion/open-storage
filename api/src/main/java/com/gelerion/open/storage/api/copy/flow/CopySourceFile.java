@@ -4,10 +4,10 @@ import com.gelerion.open.storage.api.domain.StorageFile;
 
 import java.util.stream.Stream;
 
-public class CopyFromFile extends FromSpec {
+public class CopySourceFile extends SourceSpec {
     private final StorageFile file;
 
-    public CopyFromFile(StorageFile file) {
+    public CopySourceFile(StorageFile file) {
         this.file = file;
     }
 

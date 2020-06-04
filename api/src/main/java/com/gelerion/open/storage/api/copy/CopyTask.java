@@ -2,15 +2,15 @@ package com.gelerion.open.storage.api.copy;
 
 import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.copy.flow.CopyFlow;
-import com.gelerion.open.storage.api.copy.flow.CopyFrom;
+import com.gelerion.open.storage.api.copy.flow.CopySource;
 
 public interface CopyTask {
 
-    static CopyFrom newCopyTask() {
+    static CopySource newCopyTask() {
         return new CopyFlow();
     }
 
-    static CopyFrom newCopyTask(Storage storage) {
+    static CopySource newCopyTask(Storage storage) {
         return new CopyFlow(storage);
     }
 

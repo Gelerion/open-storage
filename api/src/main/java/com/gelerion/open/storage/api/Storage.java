@@ -1,6 +1,6 @@
 package com.gelerion.open.storage.api;
 
-import com.gelerion.open.storage.api.copy.flow.CopyFrom;
+import com.gelerion.open.storage.api.copy.flow.CopySource;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
@@ -12,9 +12,9 @@ import java.util.Set;
 public interface Storage {
     String name();
 
-    Storage create(StorageDirectory folder);
+    Storage create(StorageDirectory directory);
 
-    void delete(StorageDirectory folder);
+    void delete(StorageDirectory directory);
 
     void delete(StorageFile file);
 
@@ -50,7 +50,7 @@ public interface Storage {
 
     void copy(StoragePath source, StoragePath target);
 
-    CopyFrom copy();
+    CopySource copy();
 
 //    Stream<StoragePath> glob(StoragePath path)
 

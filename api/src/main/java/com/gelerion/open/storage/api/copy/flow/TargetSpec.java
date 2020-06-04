@@ -5,24 +5,45 @@ import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 
 import java.util.Objects;
+import java.util.function.Function;
 
-public class ToSpec {
+public class TargetSpec {
     protected Storage targetStorage;
     private StorageDirectory tgtDir;
 
-    public ToSpec(StorageDirectory dir) {
+    protected Function<StorageFile, StorageFile> onBeforeCopy; //onBeforeCopy
+
+//    public static final Function<StorageFile, StorageFile> LOG_TO = destinationPath ->  {
+//        log.info("Copy to: " + destinationPath);
+//        return destinationPath;
+//    };
+
+    public TargetSpec(StorageDirectory dir) {
         this.tgtDir = dir;
     }
 
-    public static ToSpec dir(StorageDirectory dir) {
+    public static TargetSpec dir(StorageDirectory dir) {
         Objects.requireNonNull(dir);
-        return new ToSpec(dir);
+        return new TargetSpec(dir);
     }
 
-    ToSpec withStorage(Storage storage) {
+    public TargetSpec map(Function<StorageFile, StorageFile> onBeforeCopy) {
+        Objects.requireNonNull(onBeforeCopy);
+        if (this.onBeforeCopy == null) this.onBeforeCopy = onBeforeCopy;
+        else this.onBeforeCopy = this.onBeforeCopy.andThen(onBeforeCopy);
+        return this;
+    }
+
+    TargetSpec withStorage(Storage storage) {
         this.targetStorage = storage;
         return this;
     }
+
+    StorageFile applyTransformations(StorageFile file) {
+        if (this.onBeforeCopy == null) return file;
+        return onBeforeCopy.apply(file);
+    }
+
 
     //TODO: recursively resolving
     /*
@@ -49,9 +70,9 @@ public class ToSpec {
         }
     }
      */
-    StorageFile resolve(StorageFile sourceFile) {
-        return tgtDir.toStorageFile(sourceFile.fileName());
-    }
+//    StorageFile resolve(StorageFile sourceFile) {
+//        return tgtDir.toStorageFile(sourceFile.fileName());
+//    }
 
     StorageDirectory dir() {
         return tgtDir;

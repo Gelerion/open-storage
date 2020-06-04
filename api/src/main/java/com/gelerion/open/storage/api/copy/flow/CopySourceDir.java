@@ -5,10 +5,10 @@ import com.gelerion.open.storage.api.domain.StorageFile;
 
 import java.util.stream.Stream;
 
-public class CopyFromDir extends FromSpec {
+public class CopySourceDir extends SourceSpec {
     private final StorageDirectory dir;
 
-    public CopyFromDir(StorageDirectory dir) {
+    public CopySourceDir(StorageDirectory dir) {
         this.dir = dir;
     }
 

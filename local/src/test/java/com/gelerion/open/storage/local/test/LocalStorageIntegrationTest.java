@@ -316,6 +316,14 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
         assertTrue(Files.exists(Paths.get(dstDirName)));
     }*/
 
+ /*   @Test
+    public void moveDirWithFiles() {
+        String srcDirName = "abc/source";
+        String dstDirName = "target";
+        StorageDirectory current = createDir(srcDirName);
+        StorageDirectory target = createDir(dstDirName);
+    }*/
+
     @Test
     public void renameFile() {
         String dir = "dir";

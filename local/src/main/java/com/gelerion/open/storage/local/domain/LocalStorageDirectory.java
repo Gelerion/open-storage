@@ -84,8 +84,9 @@ public class LocalStorageDirectory extends LocalStoragePath implements StorageDi
     private Path doResolve(StoragePath otherPath) {
         if (otherPath.unwrap(Path.class).startsWith(currentPath)) {
             Path normalizedPath = currentPath.relativize(otherPath.unwrap(Path.class));
-            return currentPath.resolve(normalizedPath).normalize().toAbsolutePath();
+            return currentPath.resolve(normalizedPath).toAbsolutePath().normalize();
         }
         return currentPath.resolve(otherPath.toString()).toAbsolutePath();
+//        return otherPath.unwrap(Path.class).toAbsolutePath().normalize();
     }
 }

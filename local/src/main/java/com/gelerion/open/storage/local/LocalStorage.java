@@ -2,7 +2,7 @@ package com.gelerion.open.storage.local;
 
 import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.copy.CopyTask;
-import com.gelerion.open.storage.api.copy.flow.CopyFrom;
+import com.gelerion.open.storage.api.copy.flow.CopySource;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,19 +42,21 @@ public class LocalStorage implements Storage {
     }
 
     @Override
-    public Storage create(StorageDirectory dir) {
-        return exec(() -> {
-            Path path = dir.unwrap(Path.class);
-            if (!Files.exists(path)) Files.createDirectories(path);
-            return this;
-        });
+    public Storage create(StorageDirectory directory) {
+        return exec(() -> createInternal(directory));
+    }
+
+    private Storage createInternal(StorageDirectory directory) throws IOException {
+        Path path = directory.unwrap(Path.class);
+        if (!Files.exists(path)) Files.createDirectories(path);
+        return this;
     }
 
     @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void delete(StorageDirectory dir) {
+    public void delete(StorageDirectory directory) {
         run(() -> {
-            Path path = unwrapped(dir);
+            Path path = unwrapped(directory);
 
             //TODO: handle delete false
             Files.walk(path)
@@ -111,10 +114,13 @@ public class LocalStorage implements Storage {
 
     @Override
     public StorageFile move(StorageFile source, StorageFile target) {
-        return exec(() ->
-                LocalStorageFile.get(Files.move(
-                        unwrapped(source),
-                        unwrapped(source.resolve(target)), REPLACE_EXISTING)));
+        return exec(() -> {
+            final StorageFile resolved = source.resolve(target);
+            createInternal(resolved.parentDir());
+            return LocalStorageFile.get(Files.move(
+                    unwrapped(source),
+                    unwrapped(resolved), REPLACE_EXISTING));
+            });
     }
 
     @Override
@@ -123,7 +129,7 @@ public class LocalStorage implements Storage {
     }
 
     @Override
-    public CopyFrom copy() {
+    public CopySource copy() {
         return CopyTask.newCopyTask(this);
     }
 

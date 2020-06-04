@@ -2,7 +2,8 @@ package com.gelerion.open.storage.api.copy.flow;
 
 import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.copy.CopyTask;
-import com.gelerion.open.storage.api.copy.CopyTaskImpl;
+import com.gelerion.open.storage.api.copy.DifferentStoragesCopyTask;
+import com.gelerion.open.storage.api.copy.SameStorageCopyTask;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
@@ -10,10 +11,10 @@ import com.gelerion.open.storage.api.domain.StoragePath;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import static com.gelerion.open.storage.api.copy.flow.FromSpec.path;
-import static com.gelerion.open.storage.api.copy.flow.ToSpec.dir;
+import static com.gelerion.open.storage.api.copy.flow.SourceSpec.path;
+import static com.gelerion.open.storage.api.copy.flow.TargetSpec.dir;
 
-public class CopyFlow implements CopyFrom, CopyTo {
+public class CopyFlow implements CopySource, CopyTarget {
     private Storage storage;
     private CopyFlow.Source source;
     private CopyFlow.Target target;
@@ -25,24 +26,24 @@ public class CopyFlow implements CopyFrom, CopyTo {
         this.storage = storage;
     }
 
-    public CopyTo from(StoragePath path) {
+    public CopyTarget source(StoragePath path) {
         Objects.requireNonNull(path);
         Objects.requireNonNull(storage);
-        return from(storage, path);
+        return source(storage, path);
     }
 
-    public CopyTo from(Storage storage, StoragePath path) {
+    public CopyTarget source(Storage storage, StoragePath path) {
         Objects.requireNonNull(path);
-        return from(storage, path(path));
+        return source(storage, path(path));
     }
 
-    public CopyTo from(FromSpec spec) {
+    public CopyTarget source(SourceSpec spec) {
         Objects.requireNonNull(spec);
         Objects.requireNonNull(storage);
-        return from(storage, spec);
+        return source(storage, spec);
     }
 
-    public CopyTo from(Storage storage, FromSpec spec) {
+    public CopyTarget source(Storage storage, SourceSpec spec) {
         Objects.requireNonNull(storage);
         Objects.requireNonNull(spec);
         this.source = new CopyFlow.Source(spec.withStorage(storage));
@@ -50,66 +51,77 @@ public class CopyFlow implements CopyFrom, CopyTo {
     }
 
     @Override
-    public CopyTask to(StorageDirectory dir) {
+    public CopyTask target(StorageDirectory dir) {
         Objects.requireNonNull(dir);
         Objects.requireNonNull(storage);
-        return to(storage, dir);
+        return target(storage, dir);
     }
 
     @Override
-    public CopyTask to(Storage storage, StorageDirectory dir) {
+    public CopyTask target(Storage storage, StorageDirectory dir) {
         Objects.requireNonNull(dir);
         Objects.requireNonNull(storage);
-        return to(storage, dir(dir));
+        return target(storage, dir(dir));
     }
 
     @Override
-    public CopyTask to(ToSpec spec) {
+    public CopyTask target(TargetSpec spec) {
         Objects.requireNonNull(spec);
-        return to(storage, spec);
+        return target(storage, spec);
     }
 
     @Override
-    public CopyTask to(Storage storage, ToSpec spec) {
+    public CopyTask target(Storage storage, TargetSpec spec) {
         Objects.requireNonNull(spec);
         Objects.requireNonNull(storage);
         this.target = new CopyFlow.Target(spec.withStorage(storage));
-        return new CopyTaskImpl(source, target);
+
+        if (source.storage().name().equals(target.storage().name())) {
+            return new SameStorageCopyTask(source, target);
+        }
+
+        return new DifferentStoragesCopyTask(source, target);
     }
 
     public static class Source {
-        private final FromSpec fromSpec;
+        private final SourceSpec sourceSpec;
 
-        private Source(FromSpec fromSpec) {
-            this.fromSpec = fromSpec;
+        private Source(SourceSpec sourceSpec) {
+            this.sourceSpec = sourceSpec;
         }
 
         public Stream<StorageFile> files() {
-            return fromSpec.files();
+            return sourceSpec.files();
         }
 
         public Storage storage() {
-            return fromSpec.sourceStorage;
+            return sourceSpec.sourceStorage;
         }
     }
 
     public static class Target {
-        private final ToSpec toSpec;
+        private final TargetSpec targetSpec;
 
-        public Target(ToSpec toSpec) {
-            this.toSpec = toSpec;
+        public Target(TargetSpec targetSpec) {
+            this.targetSpec = targetSpec;
         }
 
-        public StorageFile resolve(StorageFile sourceFile) {
-            return toSpec.resolve(sourceFile);
-        }
+//        public StorageFile resolve(StorageFile sourceFile) {
+//            return targetSpec.resolve(sourceFile);
+//        }
 
         public StorageDirectory dir() {
-            return toSpec.dir();
+            return targetSpec.dir();
+        }
+
+        //todo handle absolute path - say s3a:// to file://
+        public StorageFile resolveTargetPath(StorageFile sourceFile) {
+            final StorageFile file = dir().toStorageFile(sourceFile.fileName());
+            return targetSpec.applyTransformations(file);
         }
 
         public Storage storage() {
-            return toSpec.targetStorage;
+            return targetSpec.targetStorage;
         }
     }
 }
