@@ -47,7 +47,7 @@ public abstract class LocalStoragePath implements StoragePath {
     public abstract LocalStorageFile resolve(StorageFile file);
 
     @Override
-    public abstract LocalStorageDirectory resolve(StorageDirectory folder);
+    public abstract LocalStorageDirectory resolve(StorageDirectory dir);
 
     public String asString() {
         return currentPath.toString();

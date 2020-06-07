@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static com.gelerion.open.storage.api.copy.flow.TargetSpec.dir;
+import static com.gelerion.open.storage.api.copy.functions.CopyFunctions.renameTo;
+import static com.gelerion.open.storage.api.copy.functions.CopyFunctions.withPrefix;
 import static java.util.Comparator.reverseOrder;
 import static java.util.function.Function.identity;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -58,7 +60,7 @@ public class LocalCopyTaskTest {
         String newName = "test2.txt";
         storage.copy()
                 .source(file)
-                .target(dir(tgtDir).map(it -> it.rename(newName)))
+                .target(dir(tgtDir).map(renameTo(newName)))
                 .execute();
 
         //source: abc/text.txt
@@ -135,7 +137,6 @@ public class LocalCopyTaskTest {
            /a/Atest.txt
            /b/Btest.txt
          */
-
 
         assertTrue(Files.exists(tgtDir.toStorageFile(fileName).unwrap(Path.class)));
         assertTrue(Files.exists(tgtDir.addSubDirectory(subdirA).toStorageFile(fileNameA).unwrap(Path.class)));

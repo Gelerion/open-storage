@@ -104,6 +104,11 @@ public class LocalStorage implements Storage {
     }
 
     @Override
+    public StorageFile rename(StorageFile source, StorageFile target) {
+        return move(source, source.rename(target.fileName()));
+    }
+
+    @Override
     public StorageFile move(StorageDirectory source, StorageDirectory target) {
         return exec(() ->
                 LocalStorageFile.get(Files.move(
@@ -152,6 +157,31 @@ public class LocalStorage implements Storage {
             }
         });
     }
+
+
+//    public Set<StorageFile> filesRecur(StorageDirectory underDir) {
+//        Path resolved = underDir.unwrap(Path.class);
+//        Predicate<Path> isDirectory = Files::isDirectory;
+//
+//        return exec(() -> {
+//            Files.list(resolved).flatMap(path -> {
+//                if (isDirectory.test(path)) {
+//                    return filesRecur(LocalStorageDirectory.get(path)).stream();
+//                }
+//
+//                return Stream.of(LocalStorageFile.get(path));
+//            });
+//            Files.walk(underDir.unwrap(Path.class)).collect(Collectors.groupingBy(isDirectory::test))
+//
+//            //Try with resources is mandatory here, do not remove it!
+//            try (Stream<Path> stream = Files.list(resolved)) {
+//                return stream.filter(isDirectory.negate())
+//                        .map(LocalStorageFile::get)
+//                        .collect(toSet());
+//            }
+//        });
+//    }
+
 
     @Override
     public Set<StorageDirectory> dirs(StorageDirectory underDir) {

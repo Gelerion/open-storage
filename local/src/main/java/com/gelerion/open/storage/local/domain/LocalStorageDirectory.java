@@ -35,26 +35,6 @@ public class LocalStorageDirectory extends LocalStoragePath implements StorageDi
         return get(currentPath.toString(), dir);
     }
 
-    //    @Override
-//    public LocalStorageDirectory addSubFolder(String folderName) {
-//        return folder(currentPath.toString(), folderName);
-//    }
-//
-//    @Override
-//    public LocalStorageDirectory addSubFolder(FolderType folderName) {
-//        return folder(currentPath.toString(), folderName.toString());
-//    }
-//
-//    @Override
-//    public StorageDirectory parentFolder() {
-//        return currentPath.getParent() != null ? wrap(currentPath.getParent()) : ROOT;
-//    }
-//
-//    @Override
-//    public StorageFile toStorageFile(String fileName) {
-//        return LocalStorageFile.locatedAt(currentPath.resolve(fileName));
-//    }
-//
 //    //TODO:
 //    @Override
 //    public String currentFolderName() {
@@ -81,12 +61,31 @@ public class LocalStorageDirectory extends LocalStoragePath implements StorageDi
 //        return asString();
 //    }
 //
-    private Path doResolve(StoragePath otherPath) {
-        if (otherPath.unwrap(Path.class).startsWith(currentPath)) {
-            Path normalizedPath = currentPath.relativize(otherPath.unwrap(Path.class));
-            return currentPath.resolve(normalizedPath).toAbsolutePath().normalize();
+    private Path doResolve(StoragePath that) {
+        final Path otherPath = that.unwrap(Path.class);
+        if (otherPath.startsWith(currentPath)) {
+            Path normalizedPath = currentPath.relativize(otherPath);
+            return currentPath.resolve(normalizedPath)/*.toAbsolutePath().normalize()*/;
         }
-        return currentPath.resolve(otherPath.toString()).toAbsolutePath();
-//        return otherPath.unwrap(Path.class).toAbsolutePath().normalize();
+
+        //currentPath.resolve(currentPath.relativize(otherPath))
+        final String left = currentPath.toAbsolutePath().normalize().toString();
+        final String right = otherPath.toAbsolutePath().normalize().toString();
+        final Path commonPrefix = Paths.get(greatestCommonPrefix(left, right));
+
+        return commonPrefix.resolve(otherPath);
+
+//        return currentPath.resolve(that.toString())/*.toAbsolutePath().normalize()*/;
+//        return that.unwrap(Path.class).toAbsolutePath().normalize();
+    }
+
+    public String greatestCommonPrefix(String a, String b) { //invariant - roots are always equals
+        int minLength = Math.min(a.length(), b.length());
+        for (int i = 0; i < minLength; i++) {
+            if (a.charAt(i) != b.charAt(i)) {
+                return a.substring(0, i);
+            }
+        }
+        return a.substring(0, minLength);
     }
 }

@@ -1,0 +1,21 @@
+package com.gelerion.open.storage.api.copy.functions;
+
+import com.gelerion.open.storage.api.domain.StorageFile;
+
+import java.util.function.Function;
+
+public class CopyFunctions {
+
+    //renameTo oldName -> newName
+    public static Function<StorageFile, StorageFile> renameTo(String newName) {
+        return file -> file.rename(newName);
+    }
+
+    public static Function<StorageFile, StorageFile> withPrefix(String prefix) {
+        return file -> file.rename(prefix + file.fileName());
+    }
+
+    public static Function<StorageFile, StorageFile> withSuffix(String suffix) {
+        return file -> file.rename(file.fileName() + suffix);
+    }
+}

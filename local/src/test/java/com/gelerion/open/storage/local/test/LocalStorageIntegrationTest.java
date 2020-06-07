@@ -334,7 +334,7 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
         createFile(Paths.get(dir, dstFileName)); //schedule deletion after the test
         storage.writer(current).write("1");
 
-        storage.move(current, renamed); //dir/target.txt
+        storage.rename(current, renamed); //dir/target.txt
         assertFalse(Files.exists(Paths.get(dir, srcFileName)));
         assertTrue(Files.exists(Paths.get(dir, dstFileName)));
     }

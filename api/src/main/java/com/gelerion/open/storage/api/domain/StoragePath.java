@@ -9,5 +9,5 @@ public interface StoragePath extends Comparable<StoragePath> {
 
     StorageFile resolve(StorageFile file);
 
-    StorageDirectory resolve(StorageDirectory folder);
+    StorageDirectory resolve(StorageDirectory dir);
 }

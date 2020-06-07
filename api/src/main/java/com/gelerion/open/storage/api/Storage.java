@@ -44,6 +44,8 @@ public interface Storage {
 
     boolean exists(StoragePath path);
 
+    StorageFile rename(StorageFile source, StorageFile target);
+
     StorageFile move(StorageDirectory source, StorageDirectory target);
 
     StorageFile move(StorageFile source, StorageFile target);
