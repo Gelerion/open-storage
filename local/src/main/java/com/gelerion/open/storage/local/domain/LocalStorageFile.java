@@ -40,4 +40,10 @@ public class LocalStorageFile extends LocalStoragePath implements StorageFile {
     public StorageFile rename(String newName) {
         return LocalStorageFile.get(currentPath).parentDir().toStorageFile(newName);
     }
+
+    @Override
+    public StorageFile butLast() {
+        return currentPath.getNameCount() == 1 ? this :
+                LocalStorageFile.get(currentPath.subpath(1, currentPath.getNameCount()));
+    }
 }

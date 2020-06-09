@@ -5,9 +5,17 @@ public interface StoragePath extends Comparable<StoragePath> {
 
     StorageDirectory parentDir();
 
-    StoragePath resolve(StoragePath other);
+    default StoragePath resolve(StoragePath other) {
+        return other instanceof StorageDirectory ?
+                resolve((StorageDirectory) other) :
+                resolve((StorageFile) other);
+    }
 
     StorageFile resolve(StorageFile file);
 
     StorageDirectory resolve(StorageDirectory dir);
+
+    //return path with first element removed or file itself
+    // a/b/c/file.txt -> b/c/file.txt
+    StoragePath butLast();
 }

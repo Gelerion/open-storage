@@ -20,7 +20,6 @@ import java.util.stream.Stream;
 
 import static com.gelerion.open.storage.api.copy.flow.TargetSpec.dir;
 import static com.gelerion.open.storage.api.copy.functions.CopyFunctions.renameTo;
-import static com.gelerion.open.storage.api.copy.functions.CopyFunctions.withPrefix;
 import static java.util.Comparator.reverseOrder;
 import static java.util.function.Function.identity;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -131,11 +130,19 @@ public class LocalCopyTaskTest {
 
         StorageDirectory tgtDir = createDir("cba");
         storage.copy().source(abcDir).target(tgtDir).execute();
+        //TODO: copy option DELETE SOURCE
 
        /* Expected result
         cba/test.txt
            /a/Atest.txt
            /b/Btest.txt
+         */
+
+        //TODO: copy option FLATTEN
+        /*
+        cba/test.txt
+            Atest.txt
+            Btest.txt
          */
 
         assertTrue(Files.exists(tgtDir.toStorageFile(fileName).unwrap(Path.class)));

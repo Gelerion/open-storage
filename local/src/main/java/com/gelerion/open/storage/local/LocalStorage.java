@@ -6,6 +6,7 @@ import com.gelerion.open.storage.api.copy.flow.CopySource;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
+import com.gelerion.open.storage.api.ops.ListFilesOption;
 import com.gelerion.open.storage.api.reader.StorageReader;
 import com.gelerion.open.storage.api.writer.StorageWriter;
 import com.gelerion.open.storage.local.domain.LocalStorageDirectory;
@@ -104,8 +105,13 @@ public class LocalStorage implements Storage {
     }
 
     @Override
-    public StorageFile rename(StorageFile source, StorageFile target) {
+    public StorageFile renameFile(StorageFile source, StorageFile target) {
         return move(source, source.rename(target.fileName()));
+    }
+
+    @Override
+    public StorageFile renameDir(StorageDirectory source, StorageDirectory target) {
+        return move(source, source.parentDir().addSubDirectory(target.dirName()));
     }
 
     @Override
@@ -113,7 +119,8 @@ public class LocalStorage implements Storage {
         return exec(() ->
                 LocalStorageFile.get(Files.move(
                         unwrapped(source),
-                        unwrapped(source.parentDir().resolve(target)), REPLACE_EXISTING))
+                        unwrapped(source.resolve(target)), REPLACE_EXISTING)
+                )
         );
     }
 
@@ -144,44 +151,27 @@ public class LocalStorage implements Storage {
 //    }
 
     @Override
-    public Set<StorageFile> files(StorageDirectory underDir) {
-        Path resolved = underDir.unwrap(Path.class);
-        Predicate<Path> isDirectory = Files::isDirectory;
-
+    public Set<StorageFile> files(StorageDirectory underDir, ListFilesOption... opts) {
+        Path start = underDir.unwrap(Path.class);
         return exec(() -> {
             //Try with resources is mandatory here, do not remove it!
-            try (Stream<Path> stream = Files.list(resolved)) {
-                return stream.filter(isDirectory.negate())
-                        .map(LocalStorageFile::get)
-                        .collect(toSet());
-            }
-        });
+            try (Stream<Path> stream = recursively(opts) ? Files.walk(start) : Files.list(start)) {
+                return collectFiles(stream).collect(toSet());
+            }});
     }
 
+    private boolean recursively(ListFilesOption... opts) {
+        if (opts.length <= 0) return false;
+        for (ListFilesOption opt : opts) {
+            if (opt == ListFilesOption.RECURSIVELY) return true;
+        }
+        return false;
+    }
 
-//    public Set<StorageFile> filesRecur(StorageDirectory underDir) {
-//        Path resolved = underDir.unwrap(Path.class);
-//        Predicate<Path> isDirectory = Files::isDirectory;
-//
-//        return exec(() -> {
-//            Files.list(resolved).flatMap(path -> {
-//                if (isDirectory.test(path)) {
-//                    return filesRecur(LocalStorageDirectory.get(path)).stream();
-//                }
-//
-//                return Stream.of(LocalStorageFile.get(path));
-//            });
-//            Files.walk(underDir.unwrap(Path.class)).collect(Collectors.groupingBy(isDirectory::test))
-//
-//            //Try with resources is mandatory here, do not remove it!
-//            try (Stream<Path> stream = Files.list(resolved)) {
-//                return stream.filter(isDirectory.negate())
-//                        .map(LocalStorageFile::get)
-//                        .collect(toSet());
-//            }
-//        });
-//    }
-
+    private Stream<StorageFile> collectFiles(Stream<Path> stream) {
+        Predicate<Path> isDirectory = Files::isDirectory;
+        return stream.filter(isDirectory.negate()).map(LocalStorageFile::get);
+    }
 
     @Override
     public Set<StorageDirectory> dirs(StorageDirectory underDir) {

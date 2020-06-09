@@ -284,7 +284,7 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
         StorageDirectory renamed = createDir(dstDirName);
         storage.create(current);
 
-        storage.move(current, renamed);
+        storage.renameDir(current, renamed);
         assertFalse(Files.exists(Paths.get(srcDirName)));
         assertTrue(Files.exists(Paths.get("abc", dstDirName)));
     }
@@ -302,6 +302,18 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
         assertTrue(Files.exists(Paths.get(dstDirName)));
     }
 
+/*    @Test
+    public void renameAndResolveNestedDstDirs() {
+        String srcDirName = "source";
+        String dstDirName = "abc/target";
+        StorageDirectory current = createDir(srcDirName);
+        StorageDirectory renamed = createDir(dstDirName);
+        storage.create(current);
+
+        storage.renameDir(current, renamed);
+        assertFalse(Files.exists(Paths.get(srcDirName)));
+        assertTrue(Files.exists(Paths.get(dstDirName)));
+    }*/
     //TODO: more understandable exception than NoSuchFileException: source -> /Users/denisshuvalov/Projects/Amazon/open-storage/local/abc/target
 /*    @Test
     public void renameAndResolveNestedDstDirs() {
@@ -334,7 +346,7 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
         createFile(Paths.get(dir, dstFileName)); //schedule deletion after the test
         storage.writer(current).write("1");
 
-        storage.rename(current, renamed); //dir/target.txt
+        storage.renameFile(current, renamed); //dir/target.txt
         assertFalse(Files.exists(Paths.get(dir, srcFileName)));
         assertTrue(Files.exists(Paths.get(dir, dstFileName)));
     }
@@ -352,6 +364,34 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
         storage.move(current, renamed); //dir/target.txt
         assertFalse(Files.exists(Paths.get(dir, srcFileName)));
         assertTrue(Files.exists(Paths.get(dir, dstFileName)));
+    }
+
+    @Test
+    public void butLastTestFile() {
+        final String expected = "b/c/test.txt";
+        final String actual = LocalStorageFile.get("a/" + expected).butLast().toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void butLastTestDir() {
+        final String expected = "b/c/d";
+        final String actual = LocalStorageDirectory.get("a/" + expected).butLast().toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void butLastIfOnlyOneElementReturnItSelfFile() {
+        final String expected = "test.txt";
+        final String actual = LocalStorageFile.get(expected).butLast().toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void butLastIfOnlyOneElementReturnItSelfDir() {
+        final String expected = "b";
+        final String actual = LocalStorageDirectory.get(expected).butLast().butLast().toString();
+        assertEquals(expected, actual);
     }
 
     //TODO: handle exception NoSuchFileException: source.txt -> /Users/denisshuvalov/Projects/Amazon/open-storage/local/dir/target.txt

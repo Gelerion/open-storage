@@ -4,6 +4,7 @@ import com.gelerion.open.storage.api.copy.flow.CopySource;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
+import com.gelerion.open.storage.api.ops.ListFilesOption;
 import com.gelerion.open.storage.api.reader.StorageReader;
 import com.gelerion.open.storage.api.writer.StorageWriter;
 
@@ -44,7 +45,9 @@ public interface Storage {
 
     boolean exists(StoragePath path);
 
-    StorageFile rename(StorageFile source, StorageFile target);
+    StorageFile renameFile(StorageFile source, StorageFile target);
+
+    StorageFile renameDir(StorageDirectory source, StorageDirectory target);
 
     StorageFile move(StorageDirectory source, StorageDirectory target);
 
@@ -60,7 +63,7 @@ public interface Storage {
     /**
      * set of files under specific directory, nested dirs aren't taken into account
      */
-    Set<StorageFile> files(StorageDirectory underDir);
+    Set<StorageFile> files(StorageDirectory underDir, ListFilesOption... opts);
     //<R> R files(Function<Stream<StorageFile>, R> func);
 
     Set<StorageDirectory> dirs(StorageDirectory underDir);

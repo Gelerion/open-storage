@@ -116,7 +116,7 @@ public class CopyFlow implements CopySource, CopyTarget {
 
         //todo handle absolute path - say s3a:// to file://
         public StorageFile resolveTargetPath(StorageFile sourceFile) {
-            final StorageFile file = dir().toStorageFile(sourceFile.fileName());
+            final StorageFile file = dir().toStorageFile(sourceFile.butLast().toString());
             return targetSpec.applyTransformations(file);
         }
 
