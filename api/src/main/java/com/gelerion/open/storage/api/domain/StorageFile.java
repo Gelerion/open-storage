@@ -1,9 +1,5 @@
 package com.gelerion.open.storage.api.domain;
 
-public interface StorageFile extends StoragePath {
+public interface StorageFile extends StoragePath<StorageFile> {
     String fileName();
-
-    StorageFile rename(String newName);
-
-    StorageFile butLast();
 }

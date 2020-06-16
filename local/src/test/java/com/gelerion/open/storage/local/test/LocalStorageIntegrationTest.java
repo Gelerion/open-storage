@@ -3,6 +3,7 @@ package com.gelerion.open.storage.local.test;
 import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
+import com.gelerion.open.storage.api.domain.StoragePath;
 import com.gelerion.open.storage.local.LocalStorage;
 import com.gelerion.open.storage.local.domain.LocalStorageDirectory;
 import com.gelerion.open.storage.local.domain.LocalStorageFile;
@@ -277,6 +278,22 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
     }
 
     @Test
+    public void renameDirWithRenamer() {
+        String srcDirName = "source";
+        String dstDirName = "target";
+        StorageDirectory current = createDir(srcDirName);
+        StorageDirectory renamed = createDir(dstDirName);
+        storage.create(current);
+
+
+        ((LocalStorage) storage).rename(current).to(renamed);
+//        storage.move(current, renamed);
+        assertFalse(Files.exists(Paths.get(srcDirName)));
+        assertTrue(Files.exists(Paths.get(dstDirName)));
+    }
+
+
+    @Test
     public void renameAndResolveDir() {
         String srcDirName = "abc/source";
         String dstDirName = "target";
@@ -284,7 +301,7 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
         StorageDirectory renamed = createDir(dstDirName);
         storage.create(current);
 
-        storage.renameDir(current, renamed);
+        storage.rename(current, renamed);
         assertFalse(Files.exists(Paths.get(srcDirName)));
         assertTrue(Files.exists(Paths.get("abc", dstDirName)));
     }
@@ -302,18 +319,33 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
         assertTrue(Files.exists(Paths.get(dstDirName)));
     }
 
-/*    @Test
-    public void renameAndResolveNestedDstDirs() {
-        String srcDirName = "source";
-        String dstDirName = "abc/target";
-        StorageDirectory current = createDir(srcDirName);
-        StorageDirectory renamed = createDir(dstDirName);
-        storage.create(current);
+//    @Test
+//    public void renameAndResolveSubDirs() throws IOException {
+//        String srcDirName = "abc/source";
+//        String dstDirName = "ebc/target";
+//        StorageDirectory current = createDir(srcDirName);
+//        StorageDirectory renamed = createDir(dstDirName);
+//
+//        storage.create(current);
+//
+//        storage.move(current, renamed);
+//        assertFalse(Files.exists(Paths.get(srcDirName)));
+//        assertTrue(Files.exists(Paths.get(dstDirName)));
+//    }
 
-        storage.renameDir(current, renamed);
-        assertFalse(Files.exists(Paths.get(srcDirName)));
-        assertTrue(Files.exists(Paths.get(dstDirName)));
-    }*/
+//    @Test
+//    public void renameAndResolveNestedDstDirs() {
+//        String srcDirName = "source";
+//        String dstDirName = "abc/target";
+//        StorageDirectory current = createDir(srcDirName);
+//        StorageDirectory renamed = createDir(dstDirName);
+//        storage.create(current);
+//
+//        storage.renameDir(current, renamed);
+//        assertFalse(Files.exists(Paths.get(srcDirName)));
+//        assertTrue(Files.exists(Paths.get(dstDirName)));
+//    }
+
     //TODO: more understandable exception than NoSuchFileException: source -> /Users/denisshuvalov/Projects/Amazon/open-storage/local/abc/target
 /*    @Test
     public void renameAndResolveNestedDstDirs() {
@@ -346,7 +378,7 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
         createFile(Paths.get(dir, dstFileName)); //schedule deletion after the test
         storage.writer(current).write("1");
 
-        storage.renameFile(current, renamed); //dir/target.txt
+        storage.rename(current, renamed); //dir/target.txt
         assertFalse(Files.exists(Paths.get(dir, srcFileName)));
         assertTrue(Files.exists(Paths.get(dir, dstFileName)));
     }

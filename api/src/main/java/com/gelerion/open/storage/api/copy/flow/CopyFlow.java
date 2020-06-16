@@ -2,7 +2,7 @@ package com.gelerion.open.storage.api.copy.flow;
 
 import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.copy.CopyTask;
-import com.gelerion.open.storage.api.copy.DifferentStoragesCopyTask;
+import com.gelerion.open.storage.api.copy.ForeignStorageCopyTask;
 import com.gelerion.open.storage.api.copy.SameStorageCopyTask;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
@@ -76,11 +76,11 @@ public class CopyFlow implements CopySource, CopyTarget {
         Objects.requireNonNull(storage);
         this.target = new CopyFlow.Target(spec.withStorage(storage));
 
-        if (source.storage().name().equals(target.storage().name())) {
+        if (source.storage().scheme().equals(target.storage().scheme())) {
             return new SameStorageCopyTask(source, target);
         }
 
-        return new DifferentStoragesCopyTask(source, target);
+        return new ForeignStorageCopyTask(source, target);
     }
 
     public static class Source {

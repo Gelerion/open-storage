@@ -2,6 +2,8 @@ package com.gelerion.open.storage.local;
 
 import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.domain.StorageFile;
+import com.gelerion.open.storage.api.domain.StoragePath;
+import com.gelerion.open.storage.api.rename.Renamer;
 import com.gelerion.open.storage.local.domain.LocalStorageDirectory;
 import com.gelerion.open.storage.local.domain.LocalStorageFile;
 
@@ -9,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -28,6 +31,7 @@ public class Main {
 
         System.out.println(path.getFileSystem());
         System.out.println("path.toAbsolutePath() = " + path.toAbsolutePath());
+
 
 //        StorageFile file = LocalStorageFile.get("abc");
 //        LocalStorageDirectory directory = new LocalStorageDirectory();

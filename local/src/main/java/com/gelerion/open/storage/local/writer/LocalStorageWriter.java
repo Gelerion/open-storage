@@ -22,7 +22,7 @@ public class LocalStorageWriter implements StorageWriter {
         this.path = path;
     }
 
-    public static LocalStorageWriter output(StoragePath output) {
+    public static LocalStorageWriter output(StoragePath<?> output) {
         return new LocalStorageWriter(output.unwrap(Path.class));
     }
 

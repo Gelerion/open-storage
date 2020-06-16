@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
-public abstract class LocalStoragePath implements StoragePath {
+public abstract class LocalStoragePath<T extends StoragePath<T>> implements StoragePath<T> {
     static final Path ROOT = Paths.get("").toAbsolutePath().getRoot();
     final Path currentPath;
 
@@ -34,20 +34,18 @@ public abstract class LocalStoragePath implements StoragePath {
     }
 
     @Override
-    public StoragePath resolve(StoragePath other) {
-        if (other instanceof LocalStorageFile)
-            return resolve((LocalStorageFile) other);
-        else if(other instanceof LocalStorageDirectory)
-            return resolve((LocalStorageDirectory) other);
+    @SuppressWarnings("unchecked")
+    public <X extends StoragePath<?>> X resolve(X that) {
+         if (that instanceof LocalStorageFile)
+            return (X) resolve((LocalStorageFile) that);
+        else if(that instanceof LocalStorageDirectory)
+            return (X) resolve((LocalStorageDirectory) that);
         throw new StorageOperationException("StoragePath must be either LocalStorageFile or LocalStorageFolder");
     }
 
+    public abstract LocalStorageFile resolve(LocalStorageFile file);
 
-    @Override
-    public abstract LocalStorageFile resolve(StorageFile file);
-
-    @Override
-    public abstract LocalStorageDirectory resolve(StorageDirectory dir);
+    public abstract LocalStorageDirectory resolve(LocalStorageDirectory dir);
 
     public String asString() {
         return currentPath.toString();
@@ -67,7 +65,7 @@ public abstract class LocalStoragePath implements StoragePath {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        LocalStoragePath that = (LocalStoragePath) o;
+        LocalStoragePath<?> that = (LocalStoragePath<?>) o;
         return Objects.equals(currentPath, that.currentPath);
     }
 

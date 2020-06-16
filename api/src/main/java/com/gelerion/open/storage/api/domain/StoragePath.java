@@ -1,21 +1,15 @@
 package com.gelerion.open.storage.api.domain;
 
-public interface StoragePath extends Comparable<StoragePath> {
+public interface StoragePath<T extends StoragePath<T>> extends Comparable<StoragePath<T>> {
     <X> X unwrap(Class<X> clazz);
 
     StorageDirectory parentDir();
 
-    default StoragePath resolve(StoragePath other) {
-        return other instanceof StorageDirectory ?
-                resolve((StorageDirectory) other) :
-                resolve((StorageFile) other);
-    }
+    <X extends StoragePath<?>> X resolve(X that);
 
-    StorageFile resolve(StorageFile file);
-
-    StorageDirectory resolve(StorageDirectory dir);
+    T rename(String target);
 
     //return path with first element removed or file itself
     // a/b/c/file.txt -> b/c/file.txt
-    StoragePath butLast();
+    T butLast();
 }

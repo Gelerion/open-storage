@@ -11,7 +11,7 @@ import com.gelerion.open.storage.api.writer.StorageWriter;
 import java.util.Set;
 
 public interface Storage {
-    String name();
+    String scheme();
 
     Storage create(StorageDirectory directory);
 
@@ -19,7 +19,7 @@ public interface Storage {
 
     void delete(StorageFile file);
 
-    default void delete(StoragePath path) {
+    default void delete(StoragePath<?> path) {
         if (path instanceof StorageFile) {
             delete((StorageFile) path);
         }
@@ -27,6 +27,8 @@ public interface Storage {
             delete((StorageDirectory) path);
         }
     }
+
+    //<X extends StoragePath<?>> void delete(X path);
 
     /**
      * @return size in bytes
@@ -43,17 +45,23 @@ public interface Storage {
 
 //    StorageUploader uploader(StorageFile file);
 
-    boolean exists(StoragePath path);
+    boolean exists(StoragePath<?> path);
 
-    StorageFile renameFile(StorageFile source, StorageFile target);
+    StorageFile rename(StorageFile source, StorageFile target);
 
-    StorageFile renameDir(StorageDirectory source, StorageDirectory target);
+    StorageFile rename(StorageFile source, String name);
 
-    StorageFile move(StorageDirectory source, StorageDirectory target);
+    StorageDirectory rename(StorageDirectory source, StorageDirectory target);
 
-    StorageFile move(StorageFile source, StorageFile target);
+    StorageDirectory rename(StorageDirectory source, String name);
 
-    void copy(StoragePath source, StoragePath target);
+    <X extends StoragePath<?>> X move(X source, X target);
+
+//    StorageFile move(StorageDirectory source, StorageDirectory target);
+//
+//    StorageFile move(StorageFile source, StorageFile target);
+
+    void copy(StoragePath<?> source, StoragePath<?> target);
 
     CopySource copy();
 

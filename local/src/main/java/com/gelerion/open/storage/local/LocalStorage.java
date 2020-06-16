@@ -6,8 +6,11 @@ import com.gelerion.open.storage.api.copy.flow.CopySource;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
+import com.gelerion.open.storage.api.exceptions.StorageOperationException;
 import com.gelerion.open.storage.api.ops.ListFilesOption;
 import com.gelerion.open.storage.api.reader.StorageReader;
+import com.gelerion.open.storage.api.rename.DirectoryRenamer;
+import com.gelerion.open.storage.api.rename.Renamer;
 import com.gelerion.open.storage.api.writer.StorageWriter;
 import com.gelerion.open.storage.local.domain.LocalStorageDirectory;
 import com.gelerion.open.storage.local.domain.LocalStorageFile;
@@ -38,7 +41,7 @@ public class LocalStorage implements Storage {
     }
 
     @Override
-    public String name() {
+    public String scheme() {
         return "local";
     }
 
@@ -100,32 +103,66 @@ public class LocalStorage implements Storage {
     }
 
     @Override
-    public boolean exists(StoragePath path) {
+    public boolean exists(StoragePath<?> path) {
         return Files.exists(unwrapped(path));
     }
 
     @Override
-    public StorageFile renameFile(StorageFile source, StorageFile target) {
+    public StorageFile rename(StorageFile source, StorageFile target) {
         return move(source, source.rename(target.fileName()));
     }
 
     @Override
-    public StorageFile renameDir(StorageDirectory source, StorageDirectory target) {
+    public StorageFile rename(StorageFile source, String name) {
+        return null;
+    }
+
+    @Override
+    public StorageDirectory rename(StorageDirectory source, StorageDirectory target) {
         return move(source, source.parentDir().addSubDirectory(target.dirName()));
     }
 
     @Override
-    public StorageFile move(StorageDirectory source, StorageDirectory target) {
+    public StorageDirectory rename(StorageDirectory source, String name) {
+        return null;
+    }
+
+    // TEST ---------------------------------
+//    public Renamer<StorageFile> rename(StorageFile source) {
+//        return new DirectoryRenamer<>(source, this);
+//    }
+
+    public Renamer<StorageDirectory> rename(StorageDirectory source) {
+        return new DirectoryRenamer(source, this);
+    }
+    // TEST ---------------------------------
+
+    //TODO; generify
+    @Override
+    @SuppressWarnings("unchecked")
+    public <X extends StoragePath<?>> X move(X source, X target) {
+        if (source instanceof LocalStorageFile) {
+            return (X) move((StorageFile) source, (StorageFile) target);
+        }
+        if (source instanceof LocalStorageDirectory) {
+            return (X) move((StorageDirectory) source, (StorageDirectory) target);
+        }
+
+        throw new StorageOperationException("source and target must be both of type LocalStorageDirectory or LocalStorageFile");
+    }
+
+//    @Override
+    public StorageDirectory move(StorageDirectory source, StorageDirectory target) {
         return exec(() ->
-                LocalStorageFile.get(Files.move(
+                LocalStorageDirectory.get(Files.move(
                         unwrapped(source),
                         unwrapped(source.resolve(target)), REPLACE_EXISTING)
                 )
         );
     }
 
-    @Override
-    public StorageFile move(StorageFile source, StorageFile target) {
+//    @Override
+    public LocalStorageFile move(StorageFile source, StorageFile target) {
         return exec(() -> {
             final StorageFile resolved = source.resolve(target);
             createInternal(resolved.parentDir());
@@ -136,7 +173,7 @@ public class LocalStorage implements Storage {
     }
 
     @Override
-    public void copy(StoragePath source, StoragePath target) {
+    public void copy(StoragePath<?> source, StoragePath<?> target) {
 //        Files.copy()
     }
 
@@ -193,7 +230,7 @@ public class LocalStorage implements Storage {
         return null;
     }
 
-    private Path unwrapped(StoragePath file) {
+    private Path unwrapped(StoragePath<?> file) {
         return file.unwrap(Path.class);
     }
 

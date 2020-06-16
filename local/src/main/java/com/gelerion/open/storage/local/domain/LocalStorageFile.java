@@ -1,12 +1,11 @@
 package com.gelerion.open.storage.local.domain;
 
-import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class LocalStorageFile extends LocalStoragePath implements StorageFile {
+public class LocalStorageFile extends LocalStoragePath<StorageFile> implements StorageFile {
 
     public static LocalStorageFile get(String path) {
         return get(Paths.get(path));
@@ -21,12 +20,12 @@ public class LocalStorageFile extends LocalStoragePath implements StorageFile {
     }
 
     @Override
-    public LocalStorageFile resolve(StorageFile file) {
+    public LocalStorageFile resolve(LocalStorageFile file) {
         return parentDir().resolve(file);
     }
 
     @Override
-    public LocalStorageDirectory resolve(StorageDirectory dir) {
+    public LocalStorageDirectory resolve(LocalStorageDirectory dir) {
         return parentDir().resolve(dir);
     }
 
@@ -37,8 +36,10 @@ public class LocalStorageFile extends LocalStoragePath implements StorageFile {
 
     //TODO: optimize?
     @Override
-    public StorageFile rename(String newName) {
-        return LocalStorageFile.get(currentPath).parentDir().toStorageFile(newName);
+    public StorageFile rename(String target) {
+        return currentPath.getNameCount() == 1 ?
+                LocalStorageFile.get(target) :
+                LocalStorageFile.get(currentPath).parentDir().toStorageFile(target);
     }
 
     @Override

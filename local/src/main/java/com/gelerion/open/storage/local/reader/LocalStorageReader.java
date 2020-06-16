@@ -27,7 +27,7 @@ public class LocalStorageReader extends StorageReaderSkeleton {
         this.path = output;
     }
 
-    public static LocalStorageReader from(StoragePath input) {
+    public static LocalStorageReader from(StoragePath<?> input) {
         return new LocalStorageReader(input.unwrap(Path.class));
     }
 
