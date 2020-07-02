@@ -10,7 +10,12 @@ public interface StorageDirectory extends StoragePath<StorageDirectory> {
 
     StorageDirectory butLast();
 
-//    @Override
+    @Override
+    default String name() {
+        return dirName();
+    }
+
+    //    @Override
 //    StorageDirectory rename(String target);
 
 //    @Override

@@ -3,7 +3,6 @@ package com.gelerion.open.storage.local.test;
 import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
-import com.gelerion.open.storage.api.domain.StoragePath;
 import com.gelerion.open.storage.local.LocalStorage;
 import com.gelerion.open.storage.local.domain.LocalStorageDirectory;
 import com.gelerion.open.storage.local.domain.LocalStorageFile;
@@ -301,7 +300,8 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
         StorageDirectory renamed = createDir(dstDirName);
         storage.create(current);
 
-        storage.rename(current, renamed);
+        storage.rename(current).to(renamed);
+//        storage.rename(current, renamed);
         assertFalse(Files.exists(Paths.get(srcDirName)));
         assertTrue(Files.exists(Paths.get("abc", dstDirName)));
     }
@@ -378,7 +378,8 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
         createFile(Paths.get(dir, dstFileName)); //schedule deletion after the test
         storage.writer(current).write("1");
 
-        storage.rename(current, renamed); //dir/target.txt
+        storage.rename(current).to(renamed); //dir/target.txt
+//        storage.rename(current, renamed); //dir/target.txt
         assertFalse(Files.exists(Paths.get(dir, srcFileName)));
         assertTrue(Files.exists(Paths.get(dir, dstFileName)));
     }

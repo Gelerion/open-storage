@@ -6,6 +6,7 @@ import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
 import com.gelerion.open.storage.api.ops.ListFilesOption;
 import com.gelerion.open.storage.api.reader.StorageReader;
+import com.gelerion.open.storage.api.rename.Renamer;
 import com.gelerion.open.storage.api.writer.StorageWriter;
 
 import java.util.Set;
@@ -47,19 +48,9 @@ public interface Storage {
 
     boolean exists(StoragePath<?> path);
 
-    StorageFile rename(StorageFile source, StorageFile target);
+    <T extends StoragePath<T>> Renamer<T> rename(T source);
 
-    StorageFile rename(StorageFile source, String name);
-
-    StorageDirectory rename(StorageDirectory source, StorageDirectory target);
-
-    StorageDirectory rename(StorageDirectory source, String name);
-
-    <X extends StoragePath<?>> X move(X source, X target);
-
-//    StorageFile move(StorageDirectory source, StorageDirectory target);
-//
-//    StorageFile move(StorageFile source, StorageFile target);
+    <T extends StoragePath<T>> T move(T source, T target);
 
     void copy(StoragePath<?> source, StoragePath<?> target);
 

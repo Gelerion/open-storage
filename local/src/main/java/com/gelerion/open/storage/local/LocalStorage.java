@@ -10,10 +10,12 @@ import com.gelerion.open.storage.api.exceptions.StorageOperationException;
 import com.gelerion.open.storage.api.ops.ListFilesOption;
 import com.gelerion.open.storage.api.reader.StorageReader;
 import com.gelerion.open.storage.api.rename.DirectoryRenamer;
+import com.gelerion.open.storage.api.rename.FileRenamer;
 import com.gelerion.open.storage.api.rename.Renamer;
 import com.gelerion.open.storage.api.writer.StorageWriter;
 import com.gelerion.open.storage.local.domain.LocalStorageDirectory;
 import com.gelerion.open.storage.local.domain.LocalStorageFile;
+import com.gelerion.open.storage.local.domain.LocalStoragePath;
 import com.gelerion.open.storage.local.reader.LocalStorageReader;
 import com.gelerion.open.storage.local.writer.LocalStorageWriter;
 import org.slf4j.Logger;
@@ -108,44 +110,35 @@ public class LocalStorage implements Storage {
     }
 
     @Override
-    public StorageFile rename(StorageFile source, StorageFile target) {
-        return move(source, source.rename(target.fileName()));
+    @SuppressWarnings("unchecked")
+    public <T extends StoragePath<T>> Renamer<T> rename(T source) {
+        assertLocal(source);
+
+        if (source instanceof LocalStorageFile) {
+            return (Renamer<T>) rename((LocalStorageFile) source);
+        }
+
+        return (Renamer<T>) rename((LocalStorageDirectory) source);
     }
 
-    @Override
-    public StorageFile rename(StorageFile source, String name) {
-        return null;
-    }
-
-    @Override
-    public StorageDirectory rename(StorageDirectory source, StorageDirectory target) {
-        return move(source, source.parentDir().addSubDirectory(target.dirName()));
-    }
-
-    @Override
-    public StorageDirectory rename(StorageDirectory source, String name) {
-        return null;
-    }
-
-    // TEST ---------------------------------
-//    public Renamer<StorageFile> rename(StorageFile source) {
-//        return new DirectoryRenamer<>(source, this);
-//    }
 
     public Renamer<StorageDirectory> rename(StorageDirectory source) {
         return new DirectoryRenamer(source, this);
     }
-    // TEST ---------------------------------
+
+    public Renamer<StorageFile> rename(StorageFile source) {
+        return new FileRenamer(source, this);
+    }
 
     //TODO; generify
     @Override
     @SuppressWarnings("unchecked")
-    public <X extends StoragePath<?>> X move(X source, X target) {
+    public <T extends StoragePath<T>> T move(T source, T target) {
         if (source instanceof LocalStorageFile) {
-            return (X) move((StorageFile) source, (StorageFile) target);
+            return (T) move((StorageFile) source, (StorageFile) target);
         }
         if (source instanceof LocalStorageDirectory) {
-            return (X) move((StorageDirectory) source, (StorageDirectory) target);
+            return (T) move((StorageDirectory) source, (StorageDirectory) target);
         }
 
         throw new StorageOperationException("source and target must be both of type LocalStorageDirectory or LocalStorageFile");
@@ -162,7 +155,7 @@ public class LocalStorage implements Storage {
     }
 
 //    @Override
-    public LocalStorageFile move(StorageFile source, StorageFile target) {
+    LocalStorageFile move(StorageFile source, StorageFile target) {
         return exec(() -> {
             final StorageFile resolved = source.resolve(target);
             createInternal(resolved.parentDir());
@@ -236,5 +229,10 @@ public class LocalStorage implements Storage {
 
     private void delete(Path path) {
         run(() -> Files.deleteIfExists(path));
+    }
+
+    private void assertLocal(StoragePath<?> path) {
+        if (!(path instanceof LocalStoragePath<?>))
+            throw new StorageOperationException("path must be either LocalStorageDirectory or LocalStorageFile");
     }
 }
