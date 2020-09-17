@@ -20,8 +20,11 @@ import java.util.stream.Stream;
 
 import static com.gelerion.open.storage.api.copy.flow.TargetSpec.dir;
 import static com.gelerion.open.storage.api.copy.functions.CopyFunctions.renameTo;
+import static com.gelerion.open.storage.api.copy.options.StandardStorageCopyOption.DELETE_SOURCE_FILES;
+import static com.gelerion.open.storage.api.copy.options.StandardStorageCopyOption.FLATTEN;
 import static java.util.Comparator.reverseOrder;
 import static java.util.function.Function.identity;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class LocalCopyTaskTest {
@@ -107,6 +110,29 @@ public class LocalCopyTaskTest {
     }
 
     @Test
+    void copyFileAndDeleteSource() {
+        String dir = "abc";
+        String fileName = "test.txt";
+        StorageFile file = createDir(dir).toStorageFile(fileName);
+        storage.writer(file).write(Stream.of("Hello world!", "What a perfect day!"));
+
+        StorageDirectory tgtDir = createDir("cbs");
+
+        //source: abc/text.txt
+        //target: cbs/
+
+        //expected result:
+        // source: abc/
+        // target: cbs/test.txt
+        storage.copy().source(file).target(tgtDir).options(DELETE_SOURCE_FILES).execute();
+
+        assertFalse(Files.exists(file.unwrap(Path.class)));
+        assertTrue(Files.exists(tgtDir.toStorageFile(fileName).unwrap(Path.class)));
+    }
+
+    //TODO: copy + delete source to the same dir
+
+    @Test
     void copyRecursively() {
         String dir = "abc";
         String subdirA = "a";
@@ -148,6 +174,87 @@ public class LocalCopyTaskTest {
         assertTrue(Files.exists(tgtDir.toStorageFile(fileName).unwrap(Path.class)));
         assertTrue(Files.exists(tgtDir.addSubDirectory(subdirA).toStorageFile(fileNameA).unwrap(Path.class)));
         assertTrue(Files.exists(tgtDir.addSubDirectory(subdirB).toStorageFile(fileNameB).unwrap(Path.class)));
+    }
+
+    @Test
+    void copyRecursivelyAndDeleteSource() {
+        String dir = "abc";
+        String subdirA = "a";
+        String subdirB = "b";
+        String fileName = "test.txt";
+        String fileNameA = "Atest.txt";
+        String fileNameB = "Btest.txt";
+        StorageDirectory abcDir = createDir(dir);
+        StorageFile file = abcDir.toStorageFile(fileName);
+        StorageFile fileA = abcDir.addSubDirectory(subdirA).toStorageFile(fileNameA);
+        StorageFile fileB = abcDir.addSubDirectory(subdirB).toStorageFile(fileNameB);
+        storage.writer(file).write("source");
+        storage.writer(fileA).write("fileA");
+        storage.writer(fileB).write("fileB");
+
+        /*
+        abc/test.txt
+           /a/Atest.txt
+           /b/Btest.txt
+         */
+
+        StorageDirectory tgtDir = createDir("cba");
+        storage.copy().source(abcDir).target(tgtDir).options(DELETE_SOURCE_FILES).execute();
+
+        /* Expected result
+        abc/
+           /a/
+           /b/
+
+        cba/test.txt
+            /a/Atest.txt
+            /b/Btest.txt
+         */
+
+        assertTrue(Files.exists(tgtDir.toStorageFile(fileName).unwrap(Path.class)));
+        assertTrue(Files.exists(tgtDir.addSubDirectory(subdirA).toStorageFile(fileNameA).unwrap(Path.class)));
+        assertTrue(Files.exists(tgtDir.addSubDirectory(subdirB).toStorageFile(fileNameB).unwrap(Path.class)));
+
+        //check deleted
+        assertFalse(Files.exists(file.unwrap(Path.class)));
+        assertFalse(Files.exists(fileA.unwrap(Path.class)));
+        assertFalse(Files.exists(fileB.unwrap(Path.class)));
+    }
+
+    @Test
+    void copyRecursivelyAndFlatten() {
+        String dir = "abc";
+        String subdirA = "a";
+        String subdirB = "b";
+        String fileName = "test.txt";
+        String fileNameA = "Atest.txt";
+        String fileNameB = "Btest.txt";
+        StorageDirectory abcDir = createDir(dir);
+        StorageFile file = abcDir.toStorageFile(fileName);
+        StorageFile fileA = abcDir.addSubDirectory(subdirA).toStorageFile(fileNameA);
+        StorageFile fileB = abcDir.addSubDirectory(subdirB).toStorageFile(fileNameB);
+        storage.writer(file).write("source");
+        storage.writer(fileA).write("fileA");
+        storage.writer(fileB).write("fileB");
+
+        /*
+        abc/test.txt
+           /a/Atest.txt
+           /b/Btest.txt
+         */
+
+        StorageDirectory tgtDir = createDir("cba");
+        storage.copy().source(abcDir).target(tgtDir).options(FLATTEN).execute();
+
+        /* Expected result
+        cba/test.txt
+            Atest.txt
+            Btest.txt
+         */
+
+        assertTrue(Files.exists(tgtDir.toStorageFile(fileName).unwrap(Path.class)));
+        assertTrue(Files.exists(tgtDir.toStorageFile(fileNameA).unwrap(Path.class)));
+        assertTrue(Files.exists(tgtDir.toStorageFile(fileNameB).unwrap(Path.class)));
     }
 
     private StorageFile createFile(String path) {
@@ -199,4 +306,9 @@ public class LocalCopyTaskTest {
                     .forEach(File::delete);
         }
     }
+
+
+    /*
+    Tests Matrix
+     */
 }

@@ -1,16 +1,34 @@
 package com.gelerion.open.storage.api.copy;
 
 import com.gelerion.open.storage.api.copy.flow.CopyFlow;
-import com.gelerion.open.storage.api.domain.StorageFile;
+import com.gelerion.open.storage.api.copy.options.StorageCopyOption;
 
 public abstract class CopyTaskSkeleton implements CopyTask {
     protected final CopyFlow.Source source;
     protected final CopyFlow.Target target;
+    protected StorageCopyOption[] copyOptions;
 
     public CopyTaskSkeleton(CopyFlow.Source source, CopyFlow.Target target) {
         this.source = source;
         this.target = target;
+        this.copyOptions = new StorageCopyOption[]{};
     }
+
+    @Override
+    public CopyTask options(StorageCopyOption... options) {
+        this.copyOptions = options;
+        return this;
+    }
+
+    protected boolean hasOption(StorageCopyOption option) {
+        if (this.copyOptions.length == 0) return false;
+        for (StorageCopyOption copyOption : this.copyOptions) {
+            if (copyOption == option) return true;
+        }
+        return false;
+    }
+
+    //TODO: [logic] add validation, e.g. make sure we don't allow coping the files to the same directory
 
 /*    @Override
     public abstract void execute() {

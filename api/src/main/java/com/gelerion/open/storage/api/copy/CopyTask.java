@@ -3,6 +3,7 @@ package com.gelerion.open.storage.api.copy;
 import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.copy.flow.CopyFlow;
 import com.gelerion.open.storage.api.copy.flow.CopySource;
+import com.gelerion.open.storage.api.copy.options.StorageCopyOption;
 
 public interface CopyTask {
 
@@ -21,6 +22,8 @@ public interface CopyTask {
      *  3. In case source path is a directory, all sub directories wont be taken into account
      */
     void execute();
+
+    CopyTask options(StorageCopyOption... options);
 
     /**
      * non blocking call, managed internally in common thread pool

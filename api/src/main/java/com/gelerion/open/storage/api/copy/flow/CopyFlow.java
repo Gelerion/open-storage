@@ -26,13 +26,13 @@ public class CopyFlow implements CopySource, CopyTarget {
         this.storage = storage;
     }
 
-    public CopyTarget source(StoragePath path) {
+    public CopyTarget source(StoragePath<?> path) {
         Objects.requireNonNull(path);
         Objects.requireNonNull(storage);
         return source(storage, path);
     }
 
-    public CopyTarget source(Storage storage, StoragePath path) {
+    public CopyTarget source(Storage storage, StoragePath<?> path) {
         Objects.requireNonNull(path);
         return source(storage, path(path));
     }
@@ -117,6 +117,11 @@ public class CopyFlow implements CopySource, CopyTarget {
         //todo handle absolute path - say s3a:// to file://
         public StorageFile resolveTargetPath(StorageFile sourceFile) {
             final StorageFile file = dir().toStorageFile(sourceFile.butLast().toString());
+            return targetSpec.applyTransformations(file);
+        }
+
+        public StorageFile resolveTargetPathFlatten(StorageFile sourceFile) {
+            final StorageFile file = dir().toStorageFile(sourceFile.name());
             return targetSpec.applyTransformations(file);
         }
 

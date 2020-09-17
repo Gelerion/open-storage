@@ -5,9 +5,9 @@ import com.gelerion.open.storage.api.domain.StoragePath;
 
 public interface CopySource {
 
-    CopyTarget source(StoragePath path);
+    CopyTarget source(StoragePath<?> path);
 
-    CopyTarget source(Storage storage, StoragePath path);
+    CopyTarget source(Storage storage, StoragePath<?> path);
 
     CopyTarget source(SourceSpec spec);
 
