@@ -1,46 +1,45 @@
 package com.gelerion.open.storage.local.domain;
 
-import com.gelerion.open.storage.api.domain.StorageDirectory;
-import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
 import com.gelerion.open.storage.api.exceptions.StorageOperationException;
+import com.gelerion.open.storage.local.dsl.PathTypeDsl;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
+import static com.gelerion.open.storage.local.dsl.PathTypeDsl.checkLocalOrFail;
+
 public abstract class LocalStoragePath<T extends StoragePath<T>> implements StoragePath<T> {
     static final Path ROOT = Paths.get("").toAbsolutePath().getRoot();
-    final Path currentPath;
+    final Path workingPath;
 
     protected LocalStoragePath(Path path) {
         Objects.requireNonNull(path, "Path must be provided");
-        this.currentPath = path;
+        this.workingPath = path;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <R> R unwrap(Class<R> clazz) {
-        if (clazz.isAssignableFrom(currentPath.getClass())) {
-            return (R) currentPath;
+        if (clazz.isAssignableFrom(workingPath.getClass())) {
+            return (R) workingPath;
         }
         throw new StorageOperationException("Unwrapping wrong instance");
     }
 
     @Override
     public LocalStorageDirectory parentDir() {
-        return currentPath.getParent() != null ?
-                LocalStorageDirectory.get(currentPath.getParent()) : absolutePathParent();
+        return workingPath.getParent() != null ?
+                LocalStorageDirectory.get(workingPath.getParent()) : absolutePathParent();
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <X extends StoragePath<?>> X resolve(X that) {
-         if (that instanceof LocalStorageFile)
-            return (X) resolve((LocalStorageFile) that);
-        else if(that instanceof LocalStorageDirectory)
-            return (X) resolve((LocalStorageDirectory) that);
-        throw new StorageOperationException("StoragePath must be either LocalStorageFile or LocalStorageFolder");
+        return checkLocalOrFail(that)
+                .whenFile(file -> (X) resolve(file))
+                .whenDir(dir   -> (X) resolve(dir));
     }
 
     public abstract LocalStorageFile resolve(LocalStorageFile file);
@@ -48,12 +47,12 @@ public abstract class LocalStoragePath<T extends StoragePath<T>> implements Stor
     public abstract LocalStorageDirectory resolve(LocalStorageDirectory dir);
 
     public String asString() {
-        return currentPath.toString();
+        return workingPath.toString();
     }
 
     @Override
     public int compareTo(StoragePath that) {
-        return currentPath.compareTo(Paths.get(that.toString()));
+        return workingPath.compareTo(Paths.get(that.toString()));
     }
 
     @Override
@@ -66,12 +65,12 @@ public abstract class LocalStoragePath<T extends StoragePath<T>> implements Stor
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         LocalStoragePath<?> that = (LocalStoragePath<?>) o;
-        return Objects.equals(currentPath, that.currentPath);
+        return Objects.equals(workingPath, that.workingPath);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(currentPath);
+        return Objects.hash(workingPath);
     }
 
     private LocalStorageDirectory absolutePathParent() {
@@ -79,11 +78,11 @@ public abstract class LocalStoragePath<T extends StoragePath<T>> implements Stor
             return LocalStorageDirectory.get(ROOT);
         }
 
-        Path parent = currentPath.toAbsolutePath().getParent();
+        Path parent = workingPath.toAbsolutePath().getParent();
         return LocalStorageDirectory.get(parent);
     }
 
     private boolean isRoot() {
-        return currentPath.toAbsolutePath().equals(ROOT);
+        return workingPath.toAbsolutePath().equals(ROOT);
     }
 }

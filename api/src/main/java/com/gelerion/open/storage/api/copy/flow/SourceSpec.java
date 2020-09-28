@@ -26,7 +26,7 @@ public abstract class SourceSpec {
 
     //glob(...)
 
-    public static SourceSpec path(StoragePath path) {
+    public static SourceSpec path(StoragePath<?> path) {
         return path instanceof StorageFile ? file((StorageFile) path) : dir((StorageDirectory) path);
     }
 

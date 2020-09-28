@@ -341,7 +341,7 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
 //        StorageDirectory renamed = createDir(dstDirName);
 //        storage.create(current);
 //
-//        storage.renameDir(current, renamed);
+//        storage.move(current, renamed);
 //        assertFalse(Files.exists(Paths.get(srcDirName)));
 //        assertTrue(Files.exists(Paths.get(dstDirName)));
 //    }

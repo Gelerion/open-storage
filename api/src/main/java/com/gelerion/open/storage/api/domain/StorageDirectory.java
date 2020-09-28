@@ -1,6 +1,5 @@
 package com.gelerion.open.storage.api.domain;
 
-//TODO: generify to local???
 public interface StorageDirectory extends StoragePath<StorageDirectory> {
     StorageFile toStorageFile(String fileName);
 
@@ -14,13 +13,4 @@ public interface StorageDirectory extends StoragePath<StorageDirectory> {
     default String name() {
         return dirName();
     }
-
-    //    @Override
-//    StorageDirectory rename(String target);
-
-//    @Override
-//    StorageDirectory resolve(StorageDirectory that);
-//
-//    @Override
-//    StorageDirectory resolve(StorageFile that);
 }

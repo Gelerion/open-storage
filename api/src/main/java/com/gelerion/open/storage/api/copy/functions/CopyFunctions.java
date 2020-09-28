@@ -11,11 +11,11 @@ public class CopyFunctions {
         return file -> file.rename(newName);
     }
 
-    public static Function<StorageFile, StorageFile> withPrefix(String prefix) {
+    public static Function<StorageFile, StorageFile> addPrefix(String prefix) {
         return file -> file.rename(prefix + file.fileName());
     }
 
-    public static Function<StorageFile, StorageFile> withSuffix(String suffix) {
+    public static Function<StorageFile, StorageFile> addSuffix(String suffix) {
         return file -> file.rename(file.fileName() + suffix);
     }
 }

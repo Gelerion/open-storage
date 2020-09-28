@@ -1,7 +1,6 @@
 package com.gelerion.open.storage.local.domain;
 
 import com.gelerion.open.storage.api.domain.StorageDirectory;
-import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
 
 import java.nio.file.Path;
@@ -27,17 +26,17 @@ public class LocalStorageDirectory extends LocalStoragePath<StorageDirectory> im
 
     @Override
     public LocalStorageFile toStorageFile(String fileName) {
-        return LocalStorageFile.get(currentPath.resolve(fileName));
+        return LocalStorageFile.get(workingPath.resolve(fileName));
     }
 
     @Override
     public LocalStorageDirectory addSubDirectory(String dir) {
-        return get(currentPath.toString(), dir);
+        return get(workingPath.toString(), dir);
     }
 
     @Override
     public String dirName() {
-        return currentPath.getFileName().toString();
+        return workingPath.getFileName().toString();
     }
 
     @Override
@@ -54,23 +53,23 @@ public class LocalStorageDirectory extends LocalStoragePath<StorageDirectory> im
 
     @Override
     public LocalStorageDirectory rename(String target) {
-        return currentPath.getNameCount() == 1 ?
+        return workingPath.getNameCount() == 1 ?
                 LocalStorageDirectory.get(target) :
-                LocalStorageDirectory.get(currentPath).parentDir().addSubDirectory(target);
+                LocalStorageDirectory.get(workingPath).parentDir().addSubDirectory(target);
     }
 
     @Override
     public LocalStorageDirectory butLast() {
-        return currentPath.getNameCount() == 1 ? this :
-                LocalStorageDirectory.get(currentPath.subpath(1, currentPath.getNameCount()));
+        return workingPath.getNameCount() == 1 ? this :
+                LocalStorageDirectory.get(workingPath.subpath(1, workingPath.getNameCount()));
     }
 
     private Path doResolve(StoragePath<?> that) {
-        final Path thatPath = currentPath.isAbsolute() ? that.unwrap(Path.class).toAbsolutePath() : that.unwrap(Path.class);
-        final Path thisPath = thatPath.isAbsolute() ? currentPath.toAbsolutePath() : currentPath;
+        final Path thatPath = workingPath.isAbsolute() ? that.unwrap(Path.class).toAbsolutePath() : that.unwrap(Path.class);
+        final Path thisPath = thatPath.isAbsolute() ? workingPath.toAbsolutePath() : workingPath;
 
         if (thatPath.startsWith(thisPath)) {
-            return currentPath.resolveSibling(thatPath);
+            return workingPath.resolveSibling(thatPath);
         }
 
         Path normalizedPath = thisPath.relativize(thatPath);

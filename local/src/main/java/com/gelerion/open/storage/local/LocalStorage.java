@@ -15,7 +15,6 @@ import com.gelerion.open.storage.api.rename.Renamer;
 import com.gelerion.open.storage.api.writer.StorageWriter;
 import com.gelerion.open.storage.local.domain.LocalStorageDirectory;
 import com.gelerion.open.storage.local.domain.LocalStorageFile;
-import com.gelerion.open.storage.local.domain.LocalStoragePath;
 import com.gelerion.open.storage.local.reader.LocalStorageReader;
 import com.gelerion.open.storage.local.writer.LocalStorageWriter;
 import org.slf4j.Logger;
@@ -31,6 +30,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static com.gelerion.open.storage.api.ops.StorageOperations.*;
+import static com.gelerion.open.storage.local.dsl.PathTypeDsl.checkLocalOrFail;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Collections.reverseOrder;
 import static java.util.stream.Collectors.toSet;
@@ -52,46 +52,18 @@ public class LocalStorage implements Storage {
         return exec(() -> createInternal(directory));
     }
 
-    private Storage createInternal(StorageDirectory directory) throws IOException {
-        Path path = directory.unwrap(Path.class);
-        if (!Files.exists(path)) Files.createDirectories(path);
-        return this;
+    @Override
+    public <T extends StoragePath<T>> void delete(T path) {
+        checkLocalOrFail(path)
+                .ifFile(this::deleteFile)
+                .ifDir(this::deleteDir);
     }
 
     @Override
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void delete(StorageDirectory directory) {
-        run(() -> {
-            Path path = unwrapped(directory);
-
-            //TODO: handle delete false
-            Files.walk(path)
-                .sorted(reverseOrder())
-                .map(Path::toFile)
-                .map(File::delete)
-                .anyMatch(x -> false); //deletion gone wrong
-        });
-    }
-
-    @Override
-    public void delete(StorageFile file) {
-        delete(unwrapped(file));
-    }
-
-    @Override
-    public long size(StorageDirectory dir) {
-        return exec(() -> {
-            Predicate<Path> isDirectory = Files::isDirectory;
-            return Files.walk(unwrapped(dir))
-                    .filter(isDirectory.negate())
-                    .mapToLong(path -> execOpt(() -> Files.size(path)).orElse(0))
-                    .sum();
-        });
-    }
-
-    @Override
-    public long size(StorageFile file) {
-        return execOpt(() -> Files.size(unwrapped(file))).orElse(0);
+    public <T extends StoragePath<T>> long size(T path) {
+        return checkLocalOrFail(path)
+                .whenFile(this::size)
+                .whenDir(this::size);
     }
 
     @Override
@@ -112,13 +84,9 @@ public class LocalStorage implements Storage {
     @Override
     @SuppressWarnings("unchecked")
     public <T extends StoragePath<T>> Renamer<T> rename(T source) {
-        assertLocal(source);
-
-        if (source instanceof LocalStorageFile) {
-            return (Renamer<T>) rename((LocalStorageFile) source);
-        }
-
-        return (Renamer<T>) rename((LocalStorageDirectory) source);
+        return checkLocalOrFail(source)
+                .whenFile(file -> (Renamer<T>) rename(file))
+                .whenDir(dir   -> (Renamer<T>) rename(dir));
     }
 
 
@@ -130,21 +98,15 @@ public class LocalStorage implements Storage {
         return new FileRenamer(source, this);
     }
 
-    //TODO; generify
+    //TODO; check invariants source- target
     @Override
     @SuppressWarnings("unchecked")
     public <T extends StoragePath<T>> T move(T source, T target) {
-        if (source instanceof LocalStorageFile) {
-            return (T) move((StorageFile) source, (StorageFile) target);
-        }
-        if (source instanceof LocalStorageDirectory) {
-            return (T) move((StorageDirectory) source, (StorageDirectory) target);
-        }
-
-        throw new StorageOperationException("source and target must be both of type LocalStorageDirectory or LocalStorageFile");
+        return checkLocalOrFail(source)
+                .whenFile(file -> (T) move(file, (StorageFile) target))
+                .whenDir(dir   -> (T) move(dir, (StorageDirectory) target));
     }
 
-//    @Override
     public StorageDirectory move(StorageDirectory source, StorageDirectory target) {
         return exec(() ->
                 LocalStorageDirectory.get(Files.move(
@@ -154,7 +116,6 @@ public class LocalStorage implements Storage {
         );
     }
 
-//    @Override
     LocalStorageFile move(StorageFile source, StorageFile target) {
         return exec(() -> {
             final StorageFile resolved = source.resolve(target);
@@ -166,19 +127,9 @@ public class LocalStorage implements Storage {
     }
 
     @Override
-    public void copy(StoragePath<?> source, StoragePath<?> target) {
-//        Files.copy()
-    }
-
-    @Override
     public CopySource copy() {
         return CopyTask.newCopyTask(this);
     }
-
-//    @Override
-//    public void copy(StoragePath source, StoragePath target) {
-//
-//    }
 
     @Override
     public Set<StorageFile> files(StorageDirectory underDir, ListFilesOption... opts) {
@@ -214,13 +165,17 @@ public class LocalStorage implements Storage {
     }
 
     @Override
-    public StorageDirectory fullPath(StorageDirectory folder) {
-        return null;
-    }
+    @SuppressWarnings("unchecked")
+    public <T extends StoragePath<T>> T absolutePath(T path) {
+        if (path instanceof LocalStorageFile) {
+            return (T) LocalStorageFile.get(path.unwrap(Path.class).toAbsolutePath());
+        }
 
-    @Override
-    public StorageFile fullPath(StorageFile file) {
-        return null;
+        if (path instanceof LocalStorageDirectory) {
+            return (T) LocalStorageDirectory.get(path.unwrap(Path.class).toAbsolutePath());
+        }
+
+        throw new StorageOperationException("path must be either LocalStorageDirectory or LocalStorageFile");
     }
 
     private Path unwrapped(StoragePath<?> file) {
@@ -231,8 +186,41 @@ public class LocalStorage implements Storage {
         run(() -> Files.deleteIfExists(path));
     }
 
-    private void assertLocal(StoragePath<?> path) {
-        if (!(path instanceof LocalStoragePath<?>))
-            throw new StorageOperationException("path must be either LocalStorageDirectory or LocalStorageFile");
+    private Storage createInternal(StorageDirectory directory) throws IOException {
+        Path path = directory.unwrap(Path.class);
+        if (!Files.exists(path)) Files.createDirectories(path);
+        return this;
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private void deleteDir(StorageDirectory directory) {
+        run(() -> {
+            Path path = unwrapped(directory);
+
+            //TODO: handle delete false
+            Files.walk(path)
+                    .sorted(reverseOrder())
+                    .map(Path::toFile)
+                    .map(File::delete)
+                    .anyMatch(x -> false); //deletion gone wrong
+        });
+    }
+
+    private void deleteFile(StorageFile file) {
+        delete(unwrapped(file));
+    }
+
+    private long size(StorageDirectory dir) {
+        return exec(() -> {
+            Predicate<Path> isDirectory = Files::isDirectory;
+            return Files.walk(unwrapped(dir))
+                    .filter(isDirectory.negate())
+                    .mapToLong(path -> execOpt(() -> Files.size(path)).orElse(0))
+                    .sum();
+        });
+    }
+
+    private long size(StorageFile file) {
+        return execOpt(() -> Files.size(unwrapped(file))).orElse(0);
     }
 }

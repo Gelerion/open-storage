@@ -31,20 +31,20 @@ public class LocalStorageFile extends LocalStoragePath<StorageFile> implements S
 
     @Override
     public String fileName() {
-        return currentPath.getFileName().toString();
+        return workingPath.getFileName().toString();
     }
 
     //TODO: optimize?
     @Override
     public StorageFile rename(String target) {
-        return currentPath.getNameCount() == 1 ?
+        return workingPath.getNameCount() == 1 ?
                 LocalStorageFile.get(target) :
-                LocalStorageFile.get(currentPath).parentDir().toStorageFile(target);
+                LocalStorageFile.get(workingPath).parentDir().toStorageFile(target);
     }
 
     @Override
     public StorageFile butLast() {
-        return currentPath.getNameCount() == 1 ? this :
-                LocalStorageFile.get(currentPath.subpath(1, currentPath.getNameCount()));
+        return workingPath.getNameCount() == 1 ? this :
+                LocalStorageFile.get(workingPath.subpath(1, workingPath.getNameCount()));
     }
 }

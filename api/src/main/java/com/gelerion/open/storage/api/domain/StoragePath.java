@@ -1,6 +1,7 @@
 package com.gelerion.open.storage.api.domain;
 
 public interface StoragePath<T extends StoragePath<T>> extends Comparable<StoragePath<T>> {
+
     <X> X unwrap(Class<X> clazz);
 
     StorageDirectory parentDir();

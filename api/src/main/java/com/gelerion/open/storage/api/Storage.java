@@ -16,27 +16,13 @@ public interface Storage {
 
     Storage create(StorageDirectory directory);
 
-    void delete(StorageDirectory directory);
-
-    void delete(StorageFile file);
-
-    default void delete(StoragePath<?> path) {
-        if (path instanceof StorageFile) {
-            delete((StorageFile) path);
-        }
-        if (path instanceof StorageDirectory) {
-            delete((StorageDirectory) path);
-        }
-    }
-
-    //<X extends StoragePath<?>> void delete(X path);
+    <T extends StoragePath<T>> void delete(T path);
 
     /**
      * @return size in bytes
      */
-    long size(StorageDirectory folder);
+    <T extends StoragePath<T>> long size(T path);
 
-    long size(StorageFile file);
 
 //    StorageFileMetadata metadata(StorageFile file);
 
@@ -52,11 +38,9 @@ public interface Storage {
 
     <T extends StoragePath<T>> T move(T source, T target);
 
-    void copy(StoragePath<?> source, StoragePath<?> target);
-
     CopySource copy();
 
-//    Stream<StoragePath> glob(StoragePath path)
+//    Stream<StoragePath> glob(String pattern)
 
     //TODO: predicate pushdown
     /**
@@ -67,10 +51,5 @@ public interface Storage {
 
     Set<StorageDirectory> dirs(StorageDirectory underDir);
 
-    StorageDirectory fullPath(StorageDirectory folder);
-
-    StorageFile fullPath(StorageFile file);
-
-    //TODO:
-    //glob()
+    <T extends StoragePath<T>> T absolutePath(T path);
 }
