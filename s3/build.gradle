@@ -3,3 +3,19 @@ plugins {
 }
 
 group 'com.gelerion.open.storage.s3'
+
+project(':s3') {
+    dependencies {
+        implementation project(':api')
+        implementation('com.amazonaws:aws-java-sdk-s3:1.11.875')
+
+        testImplementation('org.junit.jupiter:junit-jupiter:5.5.2')
+        testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.5.2')
+
+        testCompile project(path: ':api', configuration: 'testOutput')
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
