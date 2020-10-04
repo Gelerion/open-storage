@@ -48,8 +48,11 @@ public class LocalStorage implements Storage {
     }
 
     @Override
-    public Storage create(StorageDirectory directory) {
-        return exec(() -> createInternal(directory));
+    public <T extends StoragePath<T>> Storage create(T path) {
+        checkLocalOrFail(path)
+                .ifFile(file -> exec(()-> createFileInternal(file)))
+                .ifDir(dir   -> exec(() -> createDirInternal(dir)));
+        return this;
     }
 
     @Override
@@ -119,7 +122,7 @@ public class LocalStorage implements Storage {
     LocalStorageFile move(StorageFile source, StorageFile target) {
         return exec(() -> {
             final StorageFile resolved = source.resolve(target);
-            createInternal(resolved.parentDir());
+            createDirInternal(resolved.parentDir());
             return LocalStorageFile.get(Files.move(
                     unwrapped(source),
                     unwrapped(resolved), REPLACE_EXISTING));
@@ -186,7 +189,13 @@ public class LocalStorage implements Storage {
         run(() -> Files.deleteIfExists(path));
     }
 
-    private Storage createInternal(StorageDirectory directory) throws IOException {
+    private Storage createFileInternal(StorageFile file) throws IOException {
+        createDirInternal(file.parentDir());
+        Files.createFile(file.unwrap(Path.class));
+        return this;
+    }
+
+    private Storage createDirInternal(StorageDirectory directory) throws IOException {
         Path path = directory.unwrap(Path.class);
         if (!Files.exists(path)) Files.createDirectories(path);
         return this;

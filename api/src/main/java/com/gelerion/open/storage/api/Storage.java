@@ -14,7 +14,10 @@ import java.util.Set;
 public interface Storage {
     String scheme();
 
-    Storage create(StorageDirectory directory);
+    /**
+     * Create empty file or empty directory
+     */
+    <T extends StoragePath<T>> Storage create(T path);
 
     <T extends StoragePath<T>> void delete(T path);
 
