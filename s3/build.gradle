@@ -9,8 +9,15 @@ project(':s3') {
         implementation project(':api')
         implementation('com.amazonaws:aws-java-sdk-s3:1.11.875')
 
-        testImplementation('org.junit.jupiter:junit-jupiter:5.5.2')
-        testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.5.2')
+        def junitJupiterVersion = '5.7.0'
+        testImplementation "org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion"
+        testImplementation "org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion"
+        testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion"
+
+        testImplementation("org.testcontainers:testcontainers:1.15.0-rc2")
+        testImplementation("org.testcontainers:junit-jupiter:1.15.0-rc2")
+
+        testImplementation("io.minio:minio:7.1.4")
 
         testCompile project(path: ':api', configuration: 'testOutput')
     }

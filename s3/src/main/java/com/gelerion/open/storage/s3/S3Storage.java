@@ -10,9 +10,11 @@ import com.gelerion.open.storage.api.ops.ListFilesOption;
 import com.gelerion.open.storage.api.reader.StorageReader;
 import com.gelerion.open.storage.api.rename.Renamer;
 import com.gelerion.open.storage.api.writer.StorageWriter;
+import com.gelerion.open.storage.s3.domain.S3StorageDirectory;
 import com.gelerion.open.storage.s3.provider.AwsClientsProvider;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class S3Storage implements Storage {
     private final AmazonS3 s3;
@@ -90,7 +92,7 @@ public class S3Storage implements Storage {
 
     @Override
     public Set<StorageDirectory> dirs(StorageDirectory underDir) {
-        return null;
+        return s3.listBuckets().stream().map(bucket -> S3StorageDirectory.get(bucket.getName())).collect(Collectors.toSet());
     }
 
     @Override

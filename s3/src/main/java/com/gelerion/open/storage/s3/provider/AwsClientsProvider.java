@@ -1,8 +1,6 @@
 package com.gelerion.open.storage.s3.provider;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.gelerion.open.storage.s3.provider.factory.DefaultS3ClientFactory;
-import com.gelerion.open.storage.s3.provider.factory.S3ClientFactory;
 
 public class AwsClientsProvider {
     private AwsConfig config;

@@ -3,8 +3,17 @@ package com.gelerion.open.storage.s3.domain;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StoragePath;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Objects;
+
 public class S3StoragePath<T extends StoragePath<T>> implements StoragePath<T> {
     private String workingPath;
+
+    protected S3StoragePath(String path) {
+        Objects.requireNonNull(path, "Path must be provided");
+        this.workingPath = path;
+    }
 
     @Override
     public <X> X unwrap(Class<X> clazz) {
@@ -37,8 +46,17 @@ public class S3StoragePath<T extends StoragePath<T>> implements StoragePath<T> {
     }
 
     @Override
-    public int compareTo(StoragePath<T> o) {
-        return 0;
+    public int compareTo(StoragePath that) {
+        return workingPath.compareTo(that.toString());
+    }
+
+    @Override
+    public String toString() {
+        return asString();
+    }
+
+    public String asString() {
+        return workingPath;
     }
 
 }

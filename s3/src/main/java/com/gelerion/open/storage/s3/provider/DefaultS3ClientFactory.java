@@ -1,8 +1,7 @@
-package com.gelerion.open.storage.s3.provider.factory;
+package com.gelerion.open.storage.s3.provider;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.gelerion.open.storage.s3.provider.AwsConfig;
 
 public class DefaultS3ClientFactory implements S3ClientFactory {
 
