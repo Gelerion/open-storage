@@ -2,17 +2,31 @@ package com.gelerion.open.storage.s3.domain;
 
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StoragePath;
+import com.gelerion.open.storage.s3.utils.S3PathSplitter;
+import com.gelerion.open.storage.s3.utils.S3PathSplitter.BucketAndKey;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
-public class S3StoragePath<T extends StoragePath<T>> implements StoragePath<T> {
-    private String workingPath;
+public abstract class S3StoragePath<T extends StoragePath<T>> implements StoragePath<T> {
+    private final String workingPath;
+    protected String bucket;
+    protected String key;
 
     protected S3StoragePath(String path) {
-        Objects.requireNonNull(path, "Path must be provided");
+        BucketAndKey bucketAndKey = S3PathSplitter.split(path);
         this.workingPath = path;
+        this.bucket = bucketAndKey.bucket();
+        this.key = bucketAndKey.key();
+    }
+
+    public String bucket() {
+        return bucket;
+    }
+
+    public String key() {
+        return key;
     }
 
     @Override
@@ -32,11 +46,6 @@ public class S3StoragePath<T extends StoragePath<T>> implements StoragePath<T> {
 
     @Override
     public T rename(String target) {
-        return null;
-    }
-
-    @Override
-    public String name() {
         return null;
     }
 

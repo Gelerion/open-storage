@@ -10,9 +10,13 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.of;
@@ -30,6 +34,16 @@ public abstract class StorageIntegrationTest {
         this.storage = storageImpl();
     }
 
+//    @Test
+//    public void createFile() throws IOException {
+//        String fileName = "test.txt";
+//        StorageFile file = pathToStorageFile(fileName);
+//        storage.writer(file).write(Stream.of("Hello world!", "What a perfect day!"));
+//
+//        assertFileExist(file);
+//        assertFileSizeEqualsTo(file, 0);
+//    }
+
     @Test
     public void createEmptyFile() throws IOException {
         String fileName = "test.txt";
@@ -44,18 +58,18 @@ public abstract class StorageIntegrationTest {
         assertFileSizeEqualsTo(file, 0);
     }
 
-    @Test
-    public void createEmptyDir() throws IOException {
-        String dirName = "test";
-        StorageDirectory dir = pathToStorageDir(dirName);
-
-        //when
-        storage.create(dir);
-        markForCleanup(dir);
-
-        //then
-        assertDirExist(dir);
-    }
+//    @Test
+//    public void createEmptyDir() throws IOException {
+//        String dirName = "test";
+//        StorageDirectory dir = pathToStorageDir(dirName);
+//
+//        //when
+//        storage.create(dir);
+//        markForCleanup(dir);
+//
+//        //then
+//        assertDirExist(dir);
+//    }
 
     @AfterEach
     void afterEach() throws IOException {

@@ -15,7 +15,7 @@ public interface Storage {
     String scheme();
 
     /**
-     * Create empty file or empty directory
+     * Creates a directory or empty file by creating all nonexistent parent directories first.
      */
     <T extends StoragePath<T>> Storage create(T path);
 
