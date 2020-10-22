@@ -7,11 +7,16 @@ import com.gelerion.open.storage.local.LocalStorage;
 import com.gelerion.open.storage.local.domain.LocalStorageFile;
 import com.gelerion.open.storage.test.StorageIntegrationTest;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.stream.Stream;
 
+import static java.util.Comparator.reverseOrder;
+import static java.util.function.Function.identity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -31,6 +36,23 @@ public class IntTest extends StorageIntegrationTest {
     @Override
     public StorageDirectory pathToStorageDir(String s) {
         return null;
+    }
+
+    @Override
+    protected void deleteFile(StorageFile file) throws IOException {
+        Files.delete(file.unwrap(Path.class));
+    }
+
+    @Override
+    protected void deleteDir(StorageDirectory dir) throws IOException {
+        Path path = dir.unwrap(Path.class);
+        if (Files.exists(path)) {
+            Stream.of(Files.walk(path))
+                    .flatMap(identity()) //free up the resources
+                    .sorted(reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+        }
     }
 
     @Override
