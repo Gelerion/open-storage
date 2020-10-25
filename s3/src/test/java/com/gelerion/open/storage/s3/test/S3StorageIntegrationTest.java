@@ -9,8 +9,8 @@ import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.ops.StorageOperations.Exceptional;
 import com.gelerion.open.storage.api.ops.StorageOperations.VoidExceptional;
 import com.gelerion.open.storage.s3.S3Storage;
-import com.gelerion.open.storage.s3.domain.S3StorageDirectory;
-import com.gelerion.open.storage.s3.domain.S3StorageFile;
+import com.gelerion.open.storage.s3.model.S3StorageDirectory;
+import com.gelerion.open.storage.s3.model.S3StorageFile;
 import com.gelerion.open.storage.s3.provider.AwsClientsProvider;
 import com.gelerion.open.storage.s3.provider.AwsConfig;
 import com.gelerion.open.storage.test.StorageIntegrationTest;
@@ -35,13 +35,16 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toSet;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Testcontainers
 public class S3StorageIntegrationTest extends StorageIntegrationTest {
@@ -84,7 +87,7 @@ public class S3StorageIntegrationTest extends StorageIntegrationTest {
     public void assertFileExist(StorageFile file) throws IOException {
         S3StorageFile s3File = (S3StorageFile) file;
         ObjectStat stats = mc.stats(s3File.key());
-        assertEquals(file.name(), stats.name());
+        assertEquals(s3File.name(), lastName(stats.name()));
     }
 
     @Override
@@ -92,7 +95,7 @@ public class S3StorageIntegrationTest extends StorageIntegrationTest {
         S3StorageFile s3File = (S3StorageFile) file;
 
         long actualSize = mc.listObjects(s3File.key())
-                .filter(item -> item.objectName().equals(file.fileName()))
+                .filter(item -> item.objectName().equals(s3File.key()))
                 .findFirst()
                 .map(Item::size)
                 .orElseThrow(() -> new RuntimeException("File not found " + file));
@@ -107,7 +110,17 @@ public class S3StorageIntegrationTest extends StorageIntegrationTest {
 
     @Override
     public void assertDirExist(StorageDirectory dir) throws IOException {
-        throw new RuntimeException();
+        S3StorageDirectory s3Dir = (S3StorageDirectory) dir;
+        Set<String> results = mc.listObjects(s3Dir.key()).map(Item::objectName)
+                .map(object -> object.replaceAll("/", ""))
+                .collect(toSet());
+
+        assertEquals(1, results.size());
+        assertTrue(results.contains(s3Dir.dirName()));
+    }
+
+    private String lastName(String key) {
+        return !key.contains("/") ? key : key.substring(key.lastIndexOf("/") + 1);
     }
 
     // ----------------------------------------------------------------------------------
@@ -126,7 +139,7 @@ public class S3StorageIntegrationTest extends StorageIntegrationTest {
 
     @Override
     public StorageDirectory pathToStorageDir(String dir) {
-        throw new RuntimeException();
+        return S3StorageDirectory.get("s3://" + testBucket + "/" + dir);
     }
 
     @Override
@@ -138,7 +151,7 @@ public class S3StorageIntegrationTest extends StorageIntegrationTest {
     @Override
     protected void deleteDir(StorageDirectory dir) throws IOException {
         S3StorageDirectory s3Dir = (S3StorageDirectory) dir;
-        mc.listObjects(s3Dir.key()).map(Item::objectName).forEach(mc::removeObject);
+        mc.listObjectsRecursively(s3Dir.key()).map(Item::objectName).forEach(mc::removeObject);
     }
 
     // ----------------------------------------------------------------------------------
@@ -186,6 +199,7 @@ public class S3StorageIntegrationTest extends StorageIntegrationTest {
 
         private final Function<String, RemoveObjectArgs> createRemoveArgs;
         private final Function<String, ListObjectsArgs>  createListObjArgs;
+        private final Function<String, ListObjectsArgs>  createListObjArgsRecur;
         private final Function<String, StatObjectArgs>   createStatsArgs;
 
         private McOps(MinioClient mc, String testBucket) {
@@ -193,6 +207,7 @@ public class S3StorageIntegrationTest extends StorageIntegrationTest {
             this.testBucket = testBucket;
             this.createRemoveArgs = key  -> RemoveObjectArgs.builder().bucket(testBucket).object(key).build();
             this.createListObjArgs = key -> ListObjectsArgs.builder().bucket(testBucket).prefix(key).build();
+            this.createListObjArgsRecur = key -> ListObjectsArgs.builder().bucket(testBucket).prefix(key).recursive(true).build();
             this.createStatsArgs = key -> StatObjectArgs.builder().bucket(testBucket).object(key).build();
         }
 
@@ -206,6 +221,12 @@ public class S3StorageIntegrationTest extends StorageIntegrationTest {
 
         Stream<Item> listObjects(String key) {
             return Stream.of(castRuntime(() -> mc.listObjects(createListObjArgs.apply(key))))
+                    .flatMap(elems -> StreamSupport.stream(elems.spliterator(), false))
+                    .map(res -> castRuntime(res::get));
+        }
+
+        Stream<Item> listObjectsRecursively(String key) {
+            return Stream.of(castRuntime(() -> mc.listObjects(createListObjArgsRecur.apply(key))))
                     .flatMap(elems -> StreamSupport.stream(elems.spliterator(), false))
                     .map(res -> castRuntime(res::get));
         }

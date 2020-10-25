@@ -8,6 +8,8 @@ project(':s3') {
     dependencies {
         implementation project(':api')
         implementation('com.amazonaws:aws-java-sdk-s3:1.11.875')
+        //a lightweight, zero-dependency library for handling failures in Java 8+
+        implementation 'net.jodah:failsafe:2.4.0'
 
         def junitJupiterVersion = '5.7.0'
         testImplementation "org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion"

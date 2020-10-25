@@ -1,18 +1,14 @@
-package com.gelerion.open.storage.s3.domain;
+package com.gelerion.open.storage.s3.model;
 
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StoragePath;
 import com.gelerion.open.storage.s3.utils.S3PathSplitter;
 import com.gelerion.open.storage.s3.utils.S3PathSplitter.BucketAndKey;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Objects;
-
 public abstract class S3StoragePath<T extends StoragePath<T>> implements StoragePath<T> {
-    private final String workingPath;
-    protected String bucket;
-    protected String key;
+    protected final String workingPath;
+    protected final String bucket;
+    protected final String key;
 
     protected S3StoragePath(String path) {
         BucketAndKey bucketAndKey = S3PathSplitter.split(path);

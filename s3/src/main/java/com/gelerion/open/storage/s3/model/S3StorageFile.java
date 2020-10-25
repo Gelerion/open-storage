@@ -1,4 +1,4 @@
-package com.gelerion.open.storage.s3.domain;
+package com.gelerion.open.storage.s3.model;
 
 import com.gelerion.open.storage.api.domain.StorageFile;
 

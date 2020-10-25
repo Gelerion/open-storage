@@ -44,6 +44,11 @@ public class StorageOperations {
     }
 
     @FunctionalInterface
+    public interface FunctionExceptional<T, R> {
+        R execute(T arg) throws Exception;
+    }
+
+    @FunctionalInterface
     public interface VoidExceptional {
         void execute() throws Exception;
 

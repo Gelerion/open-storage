@@ -1,8 +1,6 @@
 package com.gelerion.open.storage.s3;
 
-import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.copy.flow.CopySource;
@@ -13,9 +11,9 @@ import com.gelerion.open.storage.api.ops.ListFilesOption;
 import com.gelerion.open.storage.api.reader.StorageReader;
 import com.gelerion.open.storage.api.rename.Renamer;
 import com.gelerion.open.storage.api.writer.StorageWriter;
-import com.gelerion.open.storage.s3.domain.S3StorageDirectory;
-import com.gelerion.open.storage.s3.domain.S3StorageFile;
-import com.gelerion.open.storage.s3.domain.S3StoragePath;
+import com.gelerion.open.storage.s3.model.S3StorageDirectory;
+import com.gelerion.open.storage.s3.model.S3StorageFile;
+import com.gelerion.open.storage.s3.invoker.Invoker;
 import com.gelerion.open.storage.s3.provider.AwsClientsProvider;
 import com.gelerion.open.storage.s3.writer.S3StorageWriter;
 
@@ -24,12 +22,10 @@ import java.io.InputStream;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.gelerion.open.storage.api.ops.StorageOperations.exec;
-import static com.gelerion.open.storage.api.ops.StorageOperations.run;
-
 //TODO: retry logic on retryable errors
 public class S3Storage implements Storage {
     private final AmazonS3 s3;
+    private final Invoker invoker;
 
     public static S3Storage newS3Storage() {
         return newS3Storage(AwsClientsProvider.getDefault());
@@ -41,6 +37,7 @@ public class S3Storage implements Storage {
 
     public S3Storage(AmazonS3 s3) {
         this.s3 = s3;
+        this.invoker = new Invoker(this);
     }
 
     @Override
@@ -50,9 +47,7 @@ public class S3Storage implements Storage {
 
     @Override
     public <T extends StoragePath<T>> Storage create(T path) {
-        return exec(() -> {
-            S3StoragePath<?> s3Path = (S3StoragePath<?>) path;
-
+        return invoker.retryIfBucketNotExist(path, s3Path -> {
             // create meta-data for your folder and set content-length to 0
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentLength(0);
@@ -60,18 +55,7 @@ public class S3Storage implements Storage {
             // create empty content
             InputStream emptyContent = new ByteArrayInputStream(new byte[0]);
 
-            //String s3Key = storage.mountedAt().resolve(folder).asString();
-            //TODO: refactor
-            try {
-                s3.putObject(s3Path.bucket(), s3Path.key(), emptyContent, metadata);
-            } catch (AmazonS3Exception e) {
-                if (e.getMessage().contains("bucket does not exist")) {
-                    createBucket(s3Path.bucket());
-                    create(path);
-                } else {
-                    throw e;
-                }
-            }
+            s3.putObject(s3Path.bucket(), s3Path.key(), emptyContent, metadata);
             return this;
         });
     }
@@ -132,7 +116,7 @@ public class S3Storage implements Storage {
         return null;
     }
 
-    private void createBucket(String bucket) {
+    public void createBucket(String bucket) {
         s3.createBucket(bucket);
     }
 }

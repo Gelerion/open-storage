@@ -35,17 +35,6 @@ public abstract class StorageIntegrationTest {
     }
 
     @Test
-    public void createFile() throws IOException {
-        String fileName = "test.txt";
-        StorageFile file = createStorageFile(fileName);
-        Set<String> content = Stream.of("Hello world!", "What a perfect day!").collect(toSet());
-        storage.writer(file).write(content);
-
-        assertFileExist(file);
-        assertFileSizeEqualsTo(file, calcContentSize(content));
-    }
-
-    @Test
     public void createEmptyFile() throws IOException {
         String fileName = "empty-test.txt";
         StorageFile file = createStorageFile(fileName);
@@ -58,18 +47,44 @@ public abstract class StorageIntegrationTest {
         assertFileSizeEqualsTo(file, 0);
     }
 
-//    @Test
-//    public void createEmptyDir() throws IOException {
-//        String dirName = "test";
-//        StorageDirectory dir = pathToStorageDir(dirName);
-//
-//        //when
-//        storage.create(dir);
-//        markForCleanup(dir);
-//
-//        //then
-//        assertDirExist(dir);
-//    }
+    @Test
+    public void createEmptyDir() throws IOException {
+        String dirName = "test";
+        StorageDirectory dir = createStorageDir(dirName);
+
+        //when
+        storage.create(dir);
+        markForCleanup(dir);
+
+        //then
+        assertDirExist(dir);
+    }
+
+    @Test
+    public void createFile() throws IOException {
+        String fileName = "test.txt";
+        StorageFile file = createStorageFile(fileName);
+        Set<String> content = Stream.of("Hello world!", "What a perfect day!").collect(toSet());
+        storage.writer(file).write(content);
+
+        assertFileExist(file);
+        assertFileSizeEqualsTo(file, calcContentSize(content));
+    }
+
+    @Test
+    public void createNewFileInsideNonExistingDirectory() throws IOException {
+        String dir = "abc";
+        String fileName = "test.txt";
+        StorageDirectory storageDir = createStorageDir(dir);
+        StorageFile file = storageDir.toStorageFile(fileName);
+
+        Set<String> content = Stream.of("Hello world!", "What a perfect day!").collect(toSet());
+        storage.writer(file).write(content);
+
+        assertFileExist(file);
+        assertDirExist(storageDir);
+        assertFileSizeEqualsTo(file, calcContentSize(content));
+    }
 
     @AfterEach
     protected void afterEach() throws IOException {

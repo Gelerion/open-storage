@@ -1,4 +1,4 @@
-package com.gelerion.open.storage.s3.domain;
+package com.gelerion.open.storage.s3.model;
 
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
@@ -10,7 +10,7 @@ public class S3StorageDirectory extends S3StoragePath<StorageDirectory> implemen
     }
 
 //    public static S3StorageDirectory get(String dir, String... subDirs) {
-//        return new LocalStorageDirectory(Paths.get(dir, subDirs));
+//        return new S3StorageDirectory(dir);
 //    }
 
     public static S3StorageDirectory get(String dir) {
@@ -19,7 +19,8 @@ public class S3StorageDirectory extends S3StoragePath<StorageDirectory> implemen
 
     @Override
     public StorageFile toStorageFile(String fileName) {
-        return null;
+        //TODO: check maybe
+        return S3StorageFile.get(workingPath + "/" + fileName);
     }
 
     @Override
@@ -29,6 +30,6 @@ public class S3StorageDirectory extends S3StoragePath<StorageDirectory> implemen
 
     @Override
     public String dirName() {
-        return null;
+        return !key.contains("/") ? key : key.substring(key.lastIndexOf("/") + 1);
     }
 }

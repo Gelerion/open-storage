@@ -5,7 +5,10 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.gelerion.open.storage.api.exceptions.StorageOperationException;
 import com.gelerion.open.storage.api.ops.StorageOperations.VoidExceptional;
 import com.gelerion.open.storage.api.writer.StorageWriter;
-import com.gelerion.open.storage.s3.domain.S3StorageFile;
+import com.gelerion.open.storage.s3.model.S3StorageFile;
+import com.gelerion.open.storage.s3.invoker.RetryOnMissingBucketPolicy;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -21,10 +24,13 @@ public class S3StorageWriter implements StorageWriter/*, StorageUploader*/ {
 
     private final S3StorageFile file;
     private final AmazonS3 s3;
+    private final RetryPolicy<?> retryOnMissingBucketPolicy;
 
     private S3StorageWriter(S3StorageFile file, AmazonS3 s3) {
         this.file = file;
         this.s3 = s3;
+        this.retryOnMissingBucketPolicy = RetryOnMissingBucketPolicy
+                .withCreateBucketFn(attempt -> s3.createBucket(file.bucket()));
     }
 
     public static S3StorageWriter output(S3StorageFile file, AmazonS3 s3) {
@@ -74,7 +80,7 @@ public class S3StorageWriter implements StorageWriter/*, StorageUploader*/ {
     }
 
     private void doWrite(VoidExceptional body) {
-        run(() -> createBucketIfNotExist().andThen(body));
+        run(() -> Failsafe.with(retryOnMissingBucketPolicy).run(body::execute));
     }
 
 /*    @Override
@@ -105,7 +111,7 @@ public class S3StorageWriter implements StorageWriter/*, StorageUploader*/ {
         throw new StorageOperationException("S3 append not supported");
     }
 
-    private VoidExceptional createBucketIfNotExist() {
+    private VoidExceptional retryIfBucketNotExist() {
         return () -> {
             if (!s3.doesBucketExistV2(file.bucket())) {
                 s3.createBucket(file.bucket());
