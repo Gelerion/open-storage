@@ -1,31 +1,41 @@
 package com.gelerion.open.storage.s3;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.*;
+import com.amazonaws.services.s3.model.DeleteObjectsRequest.KeyVersion;
 import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.copy.flow.CopySource;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
+import com.gelerion.open.storage.api.dsl.PathImplCheckerDsl;
 import com.gelerion.open.storage.api.ops.ListFilesOption;
 import com.gelerion.open.storage.api.reader.StorageReader;
 import com.gelerion.open.storage.api.rename.Renamer;
 import com.gelerion.open.storage.api.writer.StorageWriter;
+import com.gelerion.open.storage.s3.invoker.Invoker;
 import com.gelerion.open.storage.s3.model.S3StorageDirectory;
 import com.gelerion.open.storage.s3.model.S3StorageFile;
-import com.gelerion.open.storage.s3.invoker.Invoker;
+import com.gelerion.open.storage.s3.model.S3StoragePath;
 import com.gelerion.open.storage.s3.provider.AwsClientsProvider;
+import com.gelerion.open.storage.s3.reader.S3StorageReader;
 import com.gelerion.open.storage.s3.writer.S3StorageWriter;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.gelerion.open.storage.api.ops.StorageOperations.run;
+import static java.util.stream.Collectors.toList;
+
+//TODO: global -- assert path noy null
 //TODO: retry logic on retryable errors
 public class S3Storage implements Storage {
     private final AmazonS3 s3;
     private final Invoker invoker;
+    private final PathImplCheckerDsl<S3StorageFile, S3StorageDirectory> dsl;
 
     public static S3Storage newS3Storage() {
         return newS3Storage(AwsClientsProvider.getDefault());
@@ -37,12 +47,13 @@ public class S3Storage implements Storage {
 
     public S3Storage(AmazonS3 s3) {
         this.s3 = s3;
+        this.dsl = PathImplCheckerDsl.create(S3StorageFile.class, S3StorageDirectory.class);
         this.invoker = new Invoker(this);
     }
 
     @Override
     public String scheme() {
-        return null;
+        return "s3";
     }
 
     @Override
@@ -62,7 +73,11 @@ public class S3Storage implements Storage {
 
     @Override
     public <T extends StoragePath<T>> void delete(T path) {
-
+        dsl.checkValidImplOrFail(path)
+                .ifFile(this::delete)
+                .ifDir(this::delete);
+//        return invoker.retry()
+//                .get()
     }
 
     @Override
@@ -72,7 +87,7 @@ public class S3Storage implements Storage {
 
     @Override
     public StorageReader reader(StorageFile file) {
-        return null;
+        return new S3StorageReader(s3, (S3StoragePath<?>) file);
     }
 
     //TODO: refactor cast
@@ -108,7 +123,10 @@ public class S3Storage implements Storage {
 
     @Override
     public Set<StorageDirectory> dirs(StorageDirectory underDir) {
-        return s3.listBuckets().stream().map(bucket -> S3StorageDirectory.get(bucket.getName())).collect(Collectors.toSet());
+        return s3.listBuckets()
+                .stream()
+                .map(bucket -> S3StorageDirectory.get(bucket.getName()))
+                .collect(Collectors.toSet());
     }
 
     @Override
@@ -118,5 +136,38 @@ public class S3Storage implements Storage {
 
     public void createBucket(String bucket) {
         s3.createBucket(bucket);
+    }
+
+    private void delete(S3StorageFile s3file) {
+        run(() -> s3.deleteObject(s3file.bucket(), s3file.key()));
+    }
+
+    private void delete(S3StorageDirectory dir) {
+        run(() -> {
+            ListObjectsV2Request request = listObjectsReq(dir);
+            ListObjectsV2Result result;
+
+            do {
+                result = s3.listObjectsV2(request);
+                deleteObjects(dir, result);
+                String token = result.getNextContinuationToken();
+                request.setContinuationToken(token);
+            } while (result.isTruncated());
+        });
+    }
+
+    private ListObjectsV2Request listObjectsReq(S3StorageDirectory dir) {
+        return new ListObjectsV2Request().withBucketName(dir.bucket()).withPrefix(dir.key()).withMaxKeys(1000);
+    }
+
+    private void deleteObjects(S3StorageDirectory dir, ListObjectsV2Result objects) {
+        List<KeyVersion> keys = objects.getObjectSummaries()
+                .stream()
+                .map(S3ObjectSummary::getKey)
+                .map(KeyVersion::new)
+                .collect(toList());
+
+        DeleteObjectsRequest req = new DeleteObjectsRequest(dir.bucket()).withKeys(keys);
+        s3.deleteObjects(req);
     }
 }

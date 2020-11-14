@@ -6,11 +6,13 @@ import com.amazonaws.regions.Regions;
 import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
+import com.gelerion.open.storage.api.domain.StoragePath;
 import com.gelerion.open.storage.api.ops.StorageOperations.Exceptional;
 import com.gelerion.open.storage.api.ops.StorageOperations.VoidExceptional;
 import com.gelerion.open.storage.s3.S3Storage;
 import com.gelerion.open.storage.s3.model.S3StorageDirectory;
 import com.gelerion.open.storage.s3.model.S3StorageFile;
+import com.gelerion.open.storage.s3.model.S3StoragePath;
 import com.gelerion.open.storage.s3.provider.AwsClientsProvider;
 import com.gelerion.open.storage.s3.provider.AwsConfig;
 import com.gelerion.open.storage.test.StorageIntegrationTest;
@@ -117,6 +119,13 @@ public class S3StorageIntegrationTest extends StorageIntegrationTest {
 
         assertEquals(1, results.size());
         assertTrue(results.contains(s3Dir.dirName()));
+    }
+
+    @Override
+    protected void assertNotExist(StoragePath<?> path) throws IOException {
+        S3StoragePath<?> s3Path = (S3StoragePath<?>) path;
+        long objectsNumber = mc.listObjects(s3Path.key()).count();
+        assertEquals(0, objectsNumber, "The specified object wasn't deleted - " + s3Path.key());
     }
 
     private String lastName(String key) {

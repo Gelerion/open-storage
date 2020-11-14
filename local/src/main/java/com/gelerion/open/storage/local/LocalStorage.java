@@ -6,6 +6,7 @@ import com.gelerion.open.storage.api.copy.flow.CopySource;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
+import com.gelerion.open.storage.api.dsl.PathImplCheckerDsl;
 import com.gelerion.open.storage.api.exceptions.StorageOperationException;
 import com.gelerion.open.storage.api.ops.ListFilesOption;
 import com.gelerion.open.storage.api.reader.StorageReader;
@@ -30,13 +31,19 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static com.gelerion.open.storage.api.ops.StorageOperations.*;
-import static com.gelerion.open.storage.local.dsl.PathTypeDsl.checkLocalOrFail;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Collections.reverseOrder;
 import static java.util.stream.Collectors.toSet;
 
+//TODO: global -- assert path noy null
 public class LocalStorage implements Storage {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    private final PathImplCheckerDsl<LocalStorageFile, LocalStorageDirectory> dsl;
+
+    public LocalStorage() {
+        this.dsl = PathImplCheckerDsl.create(LocalStorageFile.class, LocalStorageDirectory.class);
+    }
 
     public static Storage newLocalStorage() {
         return new LocalStorage();
@@ -49,22 +56,21 @@ public class LocalStorage implements Storage {
 
     @Override
     public <T extends StoragePath<T>> Storage create(T path) {
-        checkLocalOrFail(path)
-                .ifFile(file -> exec(()-> createFileInternal(file)))
-                .ifDir(dir   -> exec(() -> createDirInternal(dir)));
-        return this;
+        return dsl.checkValidImplOrFail(path)
+                .whenFile(file -> exec(() -> createFileInternal(file)))
+                .whenDir(dir   -> exec(() -> createDirInternal(dir)));
     }
 
     @Override
     public <T extends StoragePath<T>> void delete(T path) {
-        checkLocalOrFail(path)
+        dsl.checkValidImplOrFail(path)
                 .ifFile(this::deleteFile)
                 .ifDir(this::deleteDir);
     }
 
     @Override
     public <T extends StoragePath<T>> long size(T path) {
-        return checkLocalOrFail(path)
+        return dsl.checkValidImplOrFail(path)
                 .whenFile(this::size)
                 .whenDir(this::size);
     }
@@ -87,7 +93,7 @@ public class LocalStorage implements Storage {
     @Override
     @SuppressWarnings("unchecked")
     public <T extends StoragePath<T>> Renamer<T> rename(T source) {
-        return checkLocalOrFail(source)
+        return dsl.checkValidImplOrFail(source)
                 .whenFile(file -> (Renamer<T>) rename(file))
                 .whenDir(dir   -> (Renamer<T>) rename(dir));
     }
@@ -105,7 +111,7 @@ public class LocalStorage implements Storage {
     @Override
     @SuppressWarnings("unchecked")
     public <T extends StoragePath<T>> T move(T source, T target) {
-        return checkLocalOrFail(source)
+        return dsl.checkValidImplOrFail(source)
                 .whenFile(file -> (T) move(file, (StorageFile) target))
                 .whenDir(dir   -> (T) move(dir, (StorageDirectory) target));
     }

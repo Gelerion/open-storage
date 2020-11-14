@@ -3,13 +3,12 @@ package com.gelerion.open.storage.s3.utils;
 import com.gelerion.open.storage.s3.exceptions.InvalidSchemaException;
 import com.gelerion.open.storage.s3.exceptions.S3BucketMustBeProvidedException;
 
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 public class S3PathSplitter {
 
     public static BucketAndKey split(String path) {
-        Objects.requireNonNull(path, "Path must not be empty");
-        checkSchemeOrFail(path);
+        checkSchemeOrFail(requireNonNull(path));
         try {
             String bucketAndKey = path.split("s3[n|a]?://")[1];
             String bucket = bucketAndKey.substring(0, bucketAndKey.indexOf("/"));

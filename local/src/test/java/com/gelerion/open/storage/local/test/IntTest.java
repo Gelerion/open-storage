@@ -3,6 +3,7 @@ package com.gelerion.open.storage.local.test;
 import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
+import com.gelerion.open.storage.api.domain.StoragePath;
 import com.gelerion.open.storage.local.LocalStorage;
 import com.gelerion.open.storage.local.domain.LocalStorageFile;
 import com.gelerion.open.storage.test.StorageIntegrationTest;
@@ -11,14 +12,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.stream.Stream;
 
 import static java.util.Comparator.reverseOrder;
 import static java.util.function.Function.identity;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class IntTest extends StorageIntegrationTest {
     private final Storage storage = LocalStorage.newLocalStorage();
@@ -75,5 +74,10 @@ public class IntTest extends StorageIntegrationTest {
     @Override
     public void assertDirExist(StorageDirectory dir) throws IOException {
         assertTrue(Files.exists(dir.unwrap(Path.class)));
+    }
+
+    @Override
+    protected void assertNotExist(StoragePath<?> storagePath) throws IOException {
+        assertFalse(Files.exists(storagePath.unwrap(Path.class)));
     }
 }

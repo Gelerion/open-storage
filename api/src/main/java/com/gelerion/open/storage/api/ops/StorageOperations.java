@@ -1,8 +1,15 @@
 package com.gelerion.open.storage.api.ops;
 
+import com.gelerion.open.storage.api.domain.StoragePath;
 import com.gelerion.open.storage.api.exceptions.StorageOperationException;
 
 public class StorageOperations {
+
+    public static <T extends StoragePath<?>> T requireNonNull(T path) {
+        if (path == null)
+            throw new StorageOperationException("Provided path must not bu null");
+        return path;
+    }
 
     public static <R> R exec(Exceptional<R> action) {
         try {

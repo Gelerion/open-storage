@@ -1,22 +1,24 @@
 package com.gelerion.open.storage.local.domain;
 
 import com.gelerion.open.storage.api.domain.StoragePath;
+import com.gelerion.open.storage.api.dsl.PathImplCheckerDsl;
 import com.gelerion.open.storage.api.exceptions.StorageOperationException;
-import com.gelerion.open.storage.local.dsl.PathTypeDsl;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
-import static com.gelerion.open.storage.local.dsl.PathTypeDsl.checkLocalOrFail;
 
 public abstract class LocalStoragePath<T extends StoragePath<T>> implements StoragePath<T> {
     static final Path ROOT = Paths.get("").toAbsolutePath().getRoot();
+    private final PathImplCheckerDsl<LocalStorageFile, LocalStorageDirectory> dsl;
     final Path workingPath;
+
 
     protected LocalStoragePath(Path path) {
         Objects.requireNonNull(path, "Path must be provided");
         this.workingPath = path;
+        this.dsl = PathImplCheckerDsl.create(LocalStorageFile.class, LocalStorageDirectory.class);
     }
 
     @Override
@@ -37,7 +39,7 @@ public abstract class LocalStoragePath<T extends StoragePath<T>> implements Stor
     @Override
     @SuppressWarnings("unchecked")
     public <X extends StoragePath<?>> X resolve(X that) {
-        return checkLocalOrFail(that)
+        return dsl.checkValidImplOrFail(that)
                 .whenFile(file -> (X) resolve(file))
                 .whenDir(dir   -> (X) resolve(dir));
     }

@@ -2,9 +2,14 @@ package com.gelerion.open.storage.s3.model;
 
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StoragePath;
+import com.gelerion.open.storage.s3.utils.S3KeySplitter;
 import com.gelerion.open.storage.s3.utils.S3PathSplitter;
 import com.gelerion.open.storage.s3.utils.S3PathSplitter.BucketAndKey;
 
+//TODO: path auditing/lineage
+//we want to track the path lineage from the creation
+// e.g. when it was modified and how exactly, path.parentDir -> in a new path it should parent add an event and
+//track the history created via constructor --> parentDir --> ....
 public abstract class S3StoragePath<T extends StoragePath<T>> implements StoragePath<T> {
     protected final String workingPath;
     protected final String bucket;
@@ -32,7 +37,9 @@ public abstract class S3StoragePath<T extends StoragePath<T>> implements Storage
 
     @Override
     public StorageDirectory parentDir() {
-        return null;
+        //TODO; extract schema from workingPath
+        //TODO S3Key joiner
+        return S3StorageDirectory.get("s3a://" + bucket + "/" + S3KeySplitter.split(key).butFirst().key());
     }
 
     @Override
@@ -63,5 +70,4 @@ public abstract class S3StoragePath<T extends StoragePath<T>> implements Storage
     public String asString() {
         return workingPath;
     }
-
 }

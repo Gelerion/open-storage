@@ -56,17 +56,6 @@ public class LocalStorageIntegrationTest /*extends StorageIntegrationTest*/ {
     }
 
     @Test
-    public void createNewFileInsideNonExistingDirectoryUsingStorageFile() {
-        String dir = "abc";
-        String fileName = "test.txt";
-        StorageFile file = createFile(Paths.get(dir, fileName));
-        storage.writer(file).write(Stream.of("Hello world!"));
-
-        Path created = Paths.get(dir, fileName);
-        assertTrue(Files.exists(created));
-    }
-
-    @Test
     public void readPreviouslyCreatedFile() {
         StorageFile file = createFile("test.txt");
         List<String> expected = asList("Hello world!", "What a perfect day!");
