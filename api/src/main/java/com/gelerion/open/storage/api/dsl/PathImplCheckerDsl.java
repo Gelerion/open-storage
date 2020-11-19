@@ -96,7 +96,7 @@ public class PathImplCheckerDsl<FileImpl extends StorageFile, DirImpl extends St
 
         @SuppressWarnings("unchecked")
         public void ifDir(Consumer<DirImpl> onDirFunc) {
-            if(isDir.test(path))
+            if (isDir.test(path))
                 onDirFunc.accept((DirImpl) path);
         }
     }

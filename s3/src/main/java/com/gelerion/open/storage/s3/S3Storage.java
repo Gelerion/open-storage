@@ -14,6 +14,7 @@ import com.gelerion.open.storage.api.reader.StorageReader;
 import com.gelerion.open.storage.api.rename.Renamer;
 import com.gelerion.open.storage.api.writer.StorageWriter;
 import com.gelerion.open.storage.s3.invoker.Invoker;
+import com.gelerion.open.storage.s3.invoker.InvokerConfig;
 import com.gelerion.open.storage.s3.model.S3StorageDirectory;
 import com.gelerion.open.storage.s3.model.S3StorageFile;
 import com.gelerion.open.storage.s3.model.S3StoragePath;
@@ -27,7 +28,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.gelerion.open.storage.api.ops.StorageOperations.run;
 import static java.util.stream.Collectors.toList;
 
 //TODO: global -- assert path noy null
@@ -38,17 +38,21 @@ public class S3Storage implements Storage {
     private final PathImplCheckerDsl<S3StorageFile, S3StorageDirectory> dsl;
 
     public static S3Storage newS3Storage() {
-        return newS3Storage(AwsClientsProvider.getDefault());
+        return newS3Storage(AwsClientsProvider.getDefault(), InvokerConfig.getDefault());
     }
 
     public static S3Storage newS3Storage(AwsClientsProvider clientsProvider) {
-        return new S3Storage(clientsProvider.s3Client());
+        return new S3Storage(clientsProvider.s3Client(), InvokerConfig.getDefault());
     }
 
-    public S3Storage(AmazonS3 s3) {
+    public static S3Storage newS3Storage(AwsClientsProvider clientsProvider, InvokerConfig config) {
+        return new S3Storage(clientsProvider.s3Client(), config);
+    }
+
+    public S3Storage(AmazonS3 s3, InvokerConfig config) {
         this.s3 = s3;
         this.dsl = PathImplCheckerDsl.create(S3StorageFile.class, S3StorageDirectory.class);
-        this.invoker = new Invoker(this);
+        this.invoker = new Invoker(this, config);
     }
 
     @Override
@@ -73,6 +77,8 @@ public class S3Storage implements Storage {
 
     @Override
     public <T extends StoragePath<T>> void delete(T path) {
+//        invoker.retry()
+
         dsl.checkValidImplOrFail(path)
                 .ifFile(this::delete)
                 .ifDir(this::delete);
@@ -139,11 +145,13 @@ public class S3Storage implements Storage {
     }
 
     private void delete(S3StorageFile s3file) {
-        run(() -> s3.deleteObject(s3file.bucket(), s3file.key()));
+        invoker.run(() -> s3.deleteObject(s3file.bucket(), s3file.key()));
+//        run(() -> s3.deleteObject(s3file.bucket(), s3file.key()));
     }
 
+    //TODO: test delete fails in the middle
     private void delete(S3StorageDirectory dir) {
-        run(() -> {
+        invoker.run(() -> {
             ListObjectsV2Request request = listObjectsReq(dir);
             ListObjectsV2Result result;
 
