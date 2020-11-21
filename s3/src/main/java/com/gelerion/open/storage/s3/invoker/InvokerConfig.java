@@ -1,6 +1,6 @@
 package com.gelerion.open.storage.s3.invoker;
 
-import com.gelerion.open.storage.s3.exceptions.UnrecoverableS3Exception;
+import com.gelerion.open.storage.s3.exceptions.unrecoverable.S3StorageUnrecoverableException;
 import net.jodah.failsafe.RetryPolicy;
 
 import java.time.Duration;
@@ -31,7 +31,6 @@ public class InvokerConfig {
         return new RetryPolicy<R>()
                 .withMaxAttempts(retryLimit)
                 .withJitter(jitterFactor)
-                .withBackoff(retryDelay.toMillis(), maxBackoffTime.toMillis(), MILLIS, backOffDelayFactor)
-                .abortOn(InterruptedException.class, UnrecoverableS3Exception.class);
+                .withBackoff(retryDelay.toMillis(), maxBackoffTime.toMillis(), MILLIS, backOffDelayFactor);
     }
 }
