@@ -18,8 +18,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(Lifecycle.PER_CLASS)
 public abstract class StorageIntegrationTest {
@@ -204,66 +203,32 @@ public abstract class StorageIntegrationTest {
         assertEquals(expectedSize, actualSize);
     }
 
-//
-//    @Test
-//    public void appendingToNotExistingFileShouldCreateNewFileAndWriteContent() throws IOException {
-//        String dir = "abc";
-//        String fileName = "test.txt";
-//        StorageFile file = createFile(Paths.get(dir, fileName));
-//        storage.writer(file).append(Stream.of("Hello world!"));
-//
-//        Path created = Paths.get(dir, fileName);
-//        assertTrue(Files.exists(created));
-//        List<String> content = Files.readAllLines(created);
-//        assertEquals(1, content.size());
-//        assertTrue(content.contains("Hello world!"));
-//    }
-//
-//    @Test
-//    public void appendingToAlreadyExistingFileShouldNotWipePreviousContent() throws IOException {
-//        String dir = "abc";
-//        String fileName = "test.txt";
-//        StorageFile file = createFile(Paths.get(dir, fileName));
-//        storage.writer(file).write(Stream.of("Hello world!"));
-//
-//        Path created = Paths.get(dir, fileName);
-//        assertTrue(Files.exists(created));
-//
-//        List<String> content = Files.readAllLines(created);
-//        assertEquals(1, content.size());
-//        assertTrue(content.contains("Hello world!"));
-//
-//        storage.writer(file).append(Stream.of("Mad world!"));
-//        content = Files.readAllLines(created);
-//        assertEquals(2, content.size());
-//
-//        ArrayList<String> expected = new ArrayList<>();
-//        expected.add("Hello world!");
-//        expected.add("Mad world!");
-//        assertIterableEquals(expected, content);
-//    }
-//
+    @Test
+    public void checkFileExistence() {
+        String fileName = "test.txt";
+        StorageFile test = createStorageFile(fileName);
 
-//
-//    @Test
-//    public void checkFileExist() {
-//        String fileName = "test.txt";
-//        StorageFile test = createFile(fileName);
-//
-//        storage.writer(test).write(Stream.of("Hello world!"));
-//
-//        Path created = Paths.get(fileName);
-//        assertTrue(Files.exists(created));
-//        assertTrue(storage.exists(test));
-//
-//        String nonExistingFile = "nonExist.txt";
-//        Path notCreated = Paths.get(nonExistingFile);
-//        assertFalse(Files.exists(notCreated));
-//        assertFalse(storage.exists(LocalStorageFile.get(nonExistingFile)));
-//    }
-//
-//
-//
+        storage.writer(test).write(Stream.of("Hello world!"));
+
+        assertTrue(storage.exists(test));
+
+        StorageFile nonExistingFile = createStorageFile("nonExist.txt");
+        assertFalse(storage.exists(nonExistingFile));
+    }
+
+    @Test
+    public void checkDirExistence() {
+        String dirName = "abc";
+        String nonExistName = "nonExist";
+        StorageDirectory abcDir = createStorageDir(dirName);
+
+        storage.create(abcDir);
+        assertTrue(storage.exists(abcDir));
+
+        StorageDirectory nonExistDir = createStorageDir(nonExistName);
+        assertFalse(storage.exists(nonExistDir));
+    }
+
 //    @Test
 //    public void listFiles() {
 //        StorageFile test = createFile("abc/test.txt");
@@ -453,6 +418,45 @@ public abstract class StorageIntegrationTest {
 //        storage.move(current, renamed); //dir/target.txt
 //        assertFalse(Files.exists(Paths.get(dir, srcFileName)));
 //        assertTrue(Files.exists(Paths.get(dir, dstFileName)));
+//    }
+
+    //
+//    @Test
+//    public void appendingToNotExistingFileShouldCreateNewFileAndWriteContent() throws IOException {
+//        String dir = "abc";
+//        String fileName = "test.txt";
+//        StorageFile file = createFile(Paths.get(dir, fileName));
+//        storage.writer(file).append(Stream.of("Hello world!"));
+//
+//        Path created = Paths.get(dir, fileName);
+//        assertTrue(Files.exists(created));
+//        List<String> content = Files.readAllLines(created);
+//        assertEquals(1, content.size());
+//        assertTrue(content.contains("Hello world!"));
+//    }
+//
+//    @Test
+//    public void appendingToAlreadyExistingFileShouldNotWipePreviousContent() throws IOException {
+//        String dir = "abc";
+//        String fileName = "test.txt";
+//        StorageFile file = createFile(Paths.get(dir, fileName));
+//        storage.writer(file).write(Stream.of("Hello world!"));
+//
+//        Path created = Paths.get(dir, fileName);
+//        assertTrue(Files.exists(created));
+//
+//        List<String> content = Files.readAllLines(created);
+//        assertEquals(1, content.size());
+//        assertTrue(content.contains("Hello world!"));
+//
+//        storage.writer(file).append(Stream.of("Mad world!"));
+//        content = Files.readAllLines(created);
+//        assertEquals(2, content.size());
+//
+//        ArrayList<String> expected = new ArrayList<>();
+//        expected.add("Hello world!");
+//        expected.add("Mad world!");
+//        assertIterableEquals(expected, content);
 //    }
 
     @AfterEach

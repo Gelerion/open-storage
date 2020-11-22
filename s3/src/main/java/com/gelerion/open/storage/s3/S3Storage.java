@@ -111,7 +111,9 @@ public class S3Storage implements Storage {
 
     @Override
     public boolean exists(StoragePath<?> path) {
-        return false;
+        return dsl.checkValidImplOrFail(path)
+                .whenFile(s3File -> invoker.exec(() -> s3.doesObjectExist(s3File.bucket(), s3File.key())))
+                .whenDir(s3Dir   -> invoker.exec(() -> s3.doesObjectExist(s3Dir.bucket(), s3Dir.key())));
     }
 
     @Override
