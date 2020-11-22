@@ -93,7 +93,9 @@ public class S3Storage implements Storage {
 
     @Override
     public <T extends StoragePath<T>> long size(T path) {
-        return 0;
+        return dsl.checkValidImplOrFail(path)
+                .whenFile(this::size)
+                .whenDir(this::size);
     }
 
     @Override
@@ -149,6 +151,29 @@ public class S3Storage implements Storage {
         s3.createBucket(bucket);
     }
 
+    private long size(S3StorageFile s3File) {
+        return invoker.exec(() -> s3.getObject(s3File.bucket(), s3File.key())
+                .getObjectMetadata()
+                .getContentLength());
+    }
+
+    private long size(S3StorageDirectory dir) {
+        return invoker.exec(() -> {
+            ListObjectsV2Request request = listObjectsReq(dir);
+            ListObjectsV2Result result;
+            long dirSize = 0;
+
+            do {
+                result = s3.listObjectsV2(request);
+                dirSize += calcTotalSize(result);
+                String token = result.getNextContinuationToken();
+                request.setContinuationToken(token);
+            } while (result.isTruncated());
+
+            return dirSize;
+        });
+    }
+
     private void delete(S3StorageFile s3file) {
         invoker.run(() -> s3.deleteObject(s3file.bucket(), s3file.key()));
     }
@@ -192,5 +217,12 @@ public class S3Storage implements Storage {
 
     private Predicate<Throwable> bucketIsMissing() {
         return ex -> ex instanceof S3StorageBucketDoesNotExistException;
+    }
+
+    private long calcTotalSize(ListObjectsV2Result result) {
+        return result.getObjectSummaries()
+                .stream()
+                .mapToLong(S3ObjectSummary::getSize)
+                .sum();
     }
 }

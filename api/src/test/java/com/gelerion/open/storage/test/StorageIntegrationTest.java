@@ -18,6 +18,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
 @TestInstance(Lifecycle.PER_CLASS)
@@ -167,9 +168,41 @@ public abstract class StorageIntegrationTest {
         assertNotExist(abcDirPath);
 
         //assert Xyz exists
-        //assertFalse(Files.exists(Paths.get(abcDirPath.toString())));
+        assertFileExist(foggy);
     }
 
+    @Test
+    public void checkFileSize() throws IOException {
+        String testFileName = "test.txt";
+        StorageDirectory abcDir = createStorageDir("abc");
+        StorageFile testFile = abcDir.toStorageFile(testFileName);
+
+        List<String> testFileContent = Stream.of("Hello world!").collect(toList());
+        storage.writer(testFile).write(testFileContent);
+
+        long actualSize = storage.size(abcDir);
+        long expectedSize = calcContentSize(testFileContent);
+        assertEquals(expectedSize, actualSize);
+    }
+
+    @Test
+    public void checkDirSize() throws IOException {
+        String testFileName = "test.txt";
+        String exampleFileName = "example.txt";
+        StorageDirectory abcDir = createStorageDir("abc");
+        StorageFile testFile = abcDir.toStorageFile(testFileName);
+        StorageFile exampleFile = abcDir.toStorageFile(exampleFileName);
+
+        List<String> exampleFileContent = Stream.of("Hello example world!").collect(toList());
+        storage.writer(exampleFile).write(exampleFileContent);
+
+        List<String> testFileContent = Stream.of("Hello world!").collect(toList());
+        storage.writer(testFile).write(testFileContent);
+
+        long actualSize = storage.size(abcDir);
+        long expectedSize = calcContentSize(exampleFileContent) + calcContentSize(testFileContent);
+        assertEquals(expectedSize, actualSize);
+    }
 
 //
 //    @Test
@@ -229,32 +262,7 @@ public abstract class StorageIntegrationTest {
 //        assertFalse(storage.exists(LocalStorageFile.get(nonExistingFile)));
 //    }
 //
-//    @Test
-//    public void checkDirExist() {
-//        String fileName = "test.txt";
-//        String dirName = "abc";
-//        StorageFile file = createFile(Paths.get(dirName, fileName));
-//        storage.writer(file).write(Stream.of("Hello world!"));
 //
-//        assertTrue(storage.exists(file.parentDir()));
-//    }
-//
-//    @Test
-//    public void checkDirSize() throws IOException {
-//        String fileName = "test.txt";
-//        String abcDir = "abc";
-//        StorageFile test = createFile(fileName);
-//        StorageFile example = createFile(Paths.get(abcDir, "example.txt"));
-//
-//        storage.writer(example).write(Stream.of("Hello example world!"));
-//        storage.writer(test).write(Stream.of("Hello world!"));
-//
-//        Path parentDir = Paths.get(test.parentDir().toString());
-//        assertEquals(computeSize(parentDir), storage.size(test.parentDir()));
-//
-//        Path filePath = Paths.get(fileName);
-//        assertEquals(Files.size(filePath), storage.size(test));
-//    }
 //
 //    @Test
 //    public void listFiles() {
