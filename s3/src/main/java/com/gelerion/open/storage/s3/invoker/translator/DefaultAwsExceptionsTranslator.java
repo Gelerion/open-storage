@@ -45,7 +45,7 @@ public class DefaultAwsExceptionsTranslator implements AwsExceptionsTranslator {
             return exception;
         }
 
-        if (!(exception instanceof AmazonClientException)) {
+        if (!(exception instanceof AmazonServiceException)) {
             return new S3StorageUnrecoverableException(exception.getMessage(), exception);
         }
 

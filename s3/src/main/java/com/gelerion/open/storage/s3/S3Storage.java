@@ -22,6 +22,7 @@ import com.gelerion.open.storage.s3.model.S3StorageFile;
 import com.gelerion.open.storage.s3.model.S3StoragePath;
 import com.gelerion.open.storage.s3.provider.AwsClientsProvider;
 import com.gelerion.open.storage.s3.reader.S3StorageReader;
+import com.gelerion.open.storage.s3.utils.S3ListObjectsStream;
 import com.gelerion.open.storage.s3.writer.S3StorageWriter;
 import net.jodah.failsafe.function.CheckedRunnable;
 
@@ -30,9 +31,9 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 //TODO: global -- assert path noy null
 public class S3Storage implements Storage {
@@ -133,7 +134,15 @@ public class S3Storage implements Storage {
 
     @Override
     public Set<StorageFile> files(StorageDirectory underDir, ListFilesOption... opts) {
-        return null;
+        S3StorageDirectory s3Dir = (S3StorageDirectory) underDir;
+        return new S3ListObjectsStream(s3)
+                .listObjects(s3Dir, recursively(opts))
+                .filter(meta -> meta.getSize() != 0)
+                .map(S3ObjectSummary::getKey)
+                .filter(it -> !it.contains("_$folder$"))
+                .map(s3Dir::resolve)
+                //.filter(isInsideInnerFolder)
+                .collect(toSet());
     }
 
     @Override
@@ -141,7 +150,7 @@ public class S3Storage implements Storage {
         return s3.listBuckets()
                 .stream()
                 .map(bucket -> S3StorageDirectory.get(bucket.getName()))
-                .collect(Collectors.toSet());
+                .collect(toSet());
     }
 
     @Override
@@ -226,5 +235,13 @@ public class S3Storage implements Storage {
                 .stream()
                 .mapToLong(S3ObjectSummary::getSize)
                 .sum();
+    }
+
+    private boolean recursively(ListFilesOption... opts) {
+        if (opts.length <= 0) return false;
+        for (ListFilesOption opt : opts) {
+            if (opt == ListFilesOption.RECURSIVELY) return true;
+        }
+        return false;
     }
 }

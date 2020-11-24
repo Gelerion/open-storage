@@ -2,6 +2,7 @@ package com.gelerion.open.storage.s3.model;
 
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StoragePath;
+import com.gelerion.open.storage.api.dsl.PathImplCheckerDsl;
 import com.gelerion.open.storage.s3.utils.S3KeySplitter;
 import com.gelerion.open.storage.s3.utils.S3PathSplitter;
 import com.gelerion.open.storage.s3.utils.S3PathSplitter.BucketAndKey;
@@ -11,6 +12,9 @@ import com.gelerion.open.storage.s3.utils.S3PathSplitter.BucketAndKey;
 // e.g. when it was modified and how exactly, path.parentDir -> in a new path it should parent add an event and
 //track the history created via constructor --> parentDir --> ....
 public abstract class S3StoragePath<T extends StoragePath<T>> implements StoragePath<T> {
+    private static final PathImplCheckerDsl<S3StorageFile, S3StorageDirectory> DSL = PathImplCheckerDsl
+            .create(S3StorageFile.class, S3StorageDirectory.class);
+
     protected final String workingPath;
     protected final String bucket;
     protected final String key;
@@ -43,9 +47,16 @@ public abstract class S3StoragePath<T extends StoragePath<T>> implements Storage
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <X extends StoragePath<?>> X resolve(X that) {
-        return null;
+        return DSL.checkValidImplOrFail(that)
+                .whenFile(file -> (X) resolve(file))
+                .whenDir(dir   -> (X) resolve(dir));
     }
+
+    public abstract S3StorageFile resolve(S3StorageFile file);
+
+    public abstract S3StorageDirectory resolve(S3StorageDirectory dir);
 
     @Override
     public T rename(String target) {

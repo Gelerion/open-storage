@@ -4,6 +4,7 @@ import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
+import com.gelerion.open.storage.api.ops.ListFilesOption;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static com.gelerion.open.storage.api.ops.ListFilesOption.RECURSIVELY;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -46,8 +48,6 @@ public abstract class StorageIntegrationTest {
         assertFileExist(file);
         assertFileSizeEqualsTo(file, 0);
     }
-
-    //todo list files
 
     @Test
     public void createEmptyDir() throws IOException {
@@ -229,21 +229,51 @@ public abstract class StorageIntegrationTest {
         assertFalse(storage.exists(nonExistDir));
     }
 
-//    @Test
-//    public void listFiles() {
-//        StorageFile test = createFile("abc/test.txt");
-//        StorageFile example = createFile("abc/example.txt");
-//        StorageFile example2 = createFile("abc/xyz/example2.txt");
-//
-//        storage.writer(test).write(Stream.of("Hello world!"));
-//        storage.writer(example).write(Stream.of("Hello world!"));
-//        storage.writer(example2).write(Stream.of("Hello world!"));
-//
-//        Set<StorageFile> files = storage.files(LocalStorageDirectory.get(Paths.get("abc")));
-//        assertEquals(files.size(), 2);
-//        Set<String> fileNames = files.stream().map(StorageFile::fileName).collect(toSet());
-//        assertTrue(fileNames.contains("test.txt"));
-//    }
+    @Test
+    public void listFiles() {
+        StorageFile test = createStorageFile("abc/test.txt");
+        StorageFile example = createStorageFile("abc/example.txt");
+        StorageFile example2 = createStorageFile("abc/xyz/example2.txt");
+
+        storage.writer(test).write(Stream.of("Hello world!"));
+        storage.writer(example).write(Stream.of("Hello world!"));
+        storage.writer(example2).write(Stream.of("Hello world!"));
+
+        StorageDirectory abcDir = test.parentDir();
+
+        Set<StorageFile> files = storage.files(abcDir);
+        assertEquals(2, files.size());
+        Set<String> fileNames = files.stream().map(StorageFile::fileName).collect(toSet());
+        assertTrue(fileNames.contains("test.txt"));
+        assertTrue(fileNames.contains("example.txt"));
+        assertFalse(fileNames.contains("example2.txt"));
+
+        StorageDirectory abcXyzDir = example2.parentDir();
+        Set<StorageFile> xyzFiles = storage.files(abcXyzDir);
+        assertEquals(1, xyzFiles.size());
+    }
+
+    @Test
+    public void listFilesRecursively() {
+        StorageFile test = createStorageFile("abc/test.txt");
+        StorageFile example = createStorageFile("abc/example.txt");
+        StorageFile example2 = createStorageFile("abc/xyz/example2.txt");
+
+        storage.writer(test).write(Stream.of("Hello world!"));
+        storage.writer(example).write(Stream.of("Hello world!"));
+        storage.writer(example2).write(Stream.of("Hello world!"));
+
+        StorageDirectory abcDir = test.parentDir();
+
+        Set<StorageFile> files = storage.files(abcDir, RECURSIVELY);
+        assertEquals(3, files.size());
+        Set<String> fileNames = files.stream().map(StorageFile::fileName).collect(toSet());
+        assertTrue(fileNames.contains("test.txt"));
+        assertTrue(fileNames.contains("example.txt"));
+        assertTrue(fileNames.contains("example2.txt"));
+    }
+
+    //TODO; list files recursively
 //
 //    @Test
 //    public void listDirs() {

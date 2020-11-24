@@ -8,7 +8,17 @@ public class S3StorageFile extends S3StoragePath<StorageFile> implements Storage
         super(path);
     }
 
-    public static StorageFile get(String path) {
+    @Override
+    public S3StorageFile resolve(S3StorageFile file) {
+        return parentDir().resolve(file);
+    }
+
+    @Override
+    public S3StorageDirectory resolve(S3StorageDirectory dir) {
+        return parentDir().resolve(dir);
+    }
+
+    public static S3StorageFile get(String path) {
         return new S3StorageFile(path);
     }
 

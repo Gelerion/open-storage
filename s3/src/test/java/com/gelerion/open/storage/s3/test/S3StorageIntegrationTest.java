@@ -52,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class S3StorageIntegrationTest extends StorageIntegrationTest {
     private static final String ACCESS_KEY = "admin";
     private static final String SECRET_KEY = "12345678";
-    private static final int PORT = 9000;
+//    private static final int PORT = 9000;
 
     private static final Network NETWORK = Network.newNetwork();
 
@@ -61,19 +61,20 @@ public class S3StorageIntegrationTest extends StorageIntegrationTest {
             .withEnv("MINIO_ACCESS_KEY", ACCESS_KEY)
             .withEnv("MINIO_SECRET_KEY", SECRET_KEY)
             //-p 9000:9000
-            .withCreateContainerCmdModifier(exposeCustomPort())
+//            .withCreateContainerCmdModifier(exposeCustomPort())
             .withNetwork(NETWORK)
             .withCommand("server /data")
             .waitingFor(serviceIsLive());
 
     private final String testBucket = "test-bucket";
-    private final String minioServerEndpoint = format("http://%s:9000", MINIO.getContainerIpAddress());
+    private String minioServerEndpoint;
 
     private McOps mc;
     private S3Storage s3Storage;
 
     @BeforeAll
     protected void init() {
+        this.minioServerEndpoint = format("http://%s:%s", MINIO.getContainerIpAddress(), MINIO.getMappedPort(9000));
         this.mc = new McOps(initMinioClient(), testBucket);
         this.s3Storage = S3Storage.newS3Storage(new AwsClientsProvider(initAwsConfig()));
         super.init();
@@ -190,17 +191,17 @@ public class S3StorageIntegrationTest extends StorageIntegrationTest {
     private static WaitStrategy serviceIsLive() {
         return new HttpWaitStrategy()
                 .forPath("/minio/health/live")
-                .forPort(PORT)
+                .forPort(9000)
                 .withStartupTimeout(Duration.ofSeconds(10));
     }
 
-    private static Consumer<CreateContainerCmd> exposeCustomPort() {
-        return cmd -> {
-            HostConfig hostConfig = cmd.getHostConfig();
-            Objects.requireNonNull(hostConfig);
-            hostConfig.withPortBindings(new PortBinding(Ports.Binding.bindPort(PORT), new ExposedPort(PORT)));
-        };
-    }
+//    private static Consumer<CreateContainerCmd> exposeCustomPort() {
+//        return cmd -> {
+//            HostConfig hostConfig = cmd.getHostConfig();
+//            Objects.requireNonNull(hostConfig);
+//            hostConfig.withPortBindings(new PortBinding(Ports.Binding.bindPort(PORT), new ExposedPort(PORT)));
+//        };
+//    }
 
     private static class McOps {
         private final MinioClient mc;
