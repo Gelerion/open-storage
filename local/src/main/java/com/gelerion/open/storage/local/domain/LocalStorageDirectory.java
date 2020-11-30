@@ -26,11 +26,13 @@ public class LocalStorageDirectory extends LocalStoragePath<StorageDirectory> im
 
     @Override
     public LocalStorageFile toStorageFile(String fileName) {
+        //TODO: validate
         return LocalStorageFile.get(workingPath.resolve(fileName));
     }
 
     @Override
     public LocalStorageDirectory addSubDirectory(String dir) {
+        //TODO: validate
         return get(workingPath.toString(), dir);
     }
 

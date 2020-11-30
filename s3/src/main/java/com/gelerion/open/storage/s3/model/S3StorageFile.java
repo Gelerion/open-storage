@@ -1,6 +1,7 @@
 package com.gelerion.open.storage.s3.model;
 
 import com.gelerion.open.storage.api.domain.StorageFile;
+import com.gelerion.open.storage.s3.utils.S3KeySplitter;
 
 public class S3StorageFile extends S3StoragePath<StorageFile> implements StorageFile {
 
@@ -30,5 +31,11 @@ public class S3StorageFile extends S3StoragePath<StorageFile> implements Storage
     @Override
     public String fileName() {
         return !key.contains("/") ? key : key.substring(key.lastIndexOf("/") + 1);
+    }
+
+    @Override
+    public StorageFile butLast() {
+        //TODO:
+        return S3StorageFile.get("s3a://" + bucket + "/" + S3KeySplitter.split(key).butLast().key());
     }
 }

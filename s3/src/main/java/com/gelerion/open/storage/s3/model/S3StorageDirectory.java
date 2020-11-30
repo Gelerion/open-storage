@@ -2,8 +2,8 @@ package com.gelerion.open.storage.s3.model;
 
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
-import com.gelerion.open.storage.api.domain.StoragePath;
 import com.gelerion.open.storage.api.exceptions.StorageOperationException;
+import com.gelerion.open.storage.s3.utils.S3KeySplitter;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,12 +43,13 @@ public class S3StorageDirectory extends S3StoragePath<StorageDirectory> implemen
     @Override
     public StorageFile toStorageFile(String fileName) {
         //TODO: check maybe
-        return S3StorageFile.get(workingPath + "/" + fileName);
+        return S3StorageFile.get(workingPath + "/" + fileName.replaceAll("/", ""));
     }
 
     @Override
     public StorageDirectory addSubDirectory(String dir) {
-        return null;
+        //TODO: check
+        return S3StorageDirectory.get(workingPath + "/" + dir.replaceAll("/", ""));
     }
 
     @Override
@@ -73,5 +74,10 @@ public class S3StorageDirectory extends S3StoragePath<StorageDirectory> implemen
         Path normalizedPath = thisPath.relativize(thatPath);
         return thisPath.resolve(normalizedPath).normalize().toString().replaceAll("\\\\", "/")/*.toAbsolutePath().normalize()*/;
 
+    }
+
+    @Override
+    public StorageDirectory butLast() {
+        return S3StorageDirectory.get("s3a://" + bucket + "/" + S3KeySplitter.split(key).butLast().key());
     }
 }

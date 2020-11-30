@@ -24,10 +24,21 @@ public class S3KeySplitter {
         // a/b/c/ -> a/b/
         public S3KeyOps butFirst() {
             if (key == null) return EMPTY;
-            if (parts.length <= 1) return EMPTY;
+            if (parts.length <= 1) return this;
 
             String[] result = new String[parts.length - 1];
             System.arraycopy(parts, 0, result, 0, result.length);
+            return new S3KeyOps(String.join("/", result), result);
+        }
+
+        //return path with first element removed or file itself
+        // a/b/c/file.txt -> b/c/file.txt
+        public S3KeyOps butLast() {
+            if (key == null) return EMPTY;
+            if (parts.length <= 1) return this;
+
+            String[] result = new String[parts.length - 1];
+            System.arraycopy(parts, 1, result, 0, result.length);
             return new S3KeyOps(String.join("/", result), result);
         }
 

@@ -4,6 +4,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest.KeyVersion;
 import com.gelerion.open.storage.api.Storage;
+import com.gelerion.open.storage.api.copy.CopyTask;
 import com.gelerion.open.storage.api.copy.flow.CopySource;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
@@ -118,8 +119,11 @@ public class S3Storage implements Storage {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T extends StoragePath<T>> Renamer<T> rename(T source) {
-        return null;
+        return dsl.checkValidImplOrFail(source)
+                .whenFile(file -> (Renamer<T>) rename(file))
+                .whenDir(dir   -> (Renamer<T>) rename(dir));
     }
 
     @Override
@@ -129,7 +133,7 @@ public class S3Storage implements Storage {
 
     @Override
     public CopySource copy() {
-        return null;
+        return CopyTask.newCopyTask(this);
     }
 
     @Override
@@ -141,16 +145,26 @@ public class S3Storage implements Storage {
                 .map(S3ObjectSummary::getKey)
                 .filter(it -> !it.contains("_$folder$"))
                 .map(s3Dir::resolve)
-                //.filter(isInsideInnerFolder)
                 .collect(toSet());
     }
 
     @Override
     public Set<StorageDirectory> dirs(StorageDirectory underDir) {
-        return s3.listBuckets()
-                .stream()
-                .map(bucket -> S3StorageDirectory.get(bucket.getName()))
+        S3StorageDirectory s3Dir = (S3StorageDirectory) underDir;
+        return new S3ListObjectsStream(s3)
+                .listObjects(s3Dir, true)
+                .filter(meta -> meta.getSize() == 0)
+                .map(S3ObjectSummary::getKey)
+                .filter(it -> !it.contains("_$folder$"))
+                .map(key -> {
+                    //TODO: fixme
+                    return S3StorageDirectory.get("s3a://" + s3Dir.bucket() + "/" + s3Dir.resolve(key).key());
+                })
                 .collect(toSet());
+//        return s3.listBuckets()
+//                .stream()
+//                .map(bucket -> S3StorageDirectory.get(bucket.getName()))
+//                .collect(toSet());
     }
 
     @Override

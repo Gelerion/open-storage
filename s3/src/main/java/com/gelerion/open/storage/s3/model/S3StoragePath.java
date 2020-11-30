@@ -3,6 +3,7 @@ package com.gelerion.open.storage.s3.model;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StoragePath;
 import com.gelerion.open.storage.api.dsl.PathImplCheckerDsl;
+import com.gelerion.open.storage.api.exceptions.StorageOperationException;
 import com.gelerion.open.storage.s3.utils.S3KeySplitter;
 import com.gelerion.open.storage.s3.utils.S3PathSplitter;
 import com.gelerion.open.storage.s3.utils.S3PathSplitter.BucketAndKey;
@@ -35,8 +36,12 @@ public abstract class S3StoragePath<T extends StoragePath<T>> implements Storage
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <X> X unwrap(Class<X> clazz) {
-        return null;
+        if (clazz.isAssignableFrom(workingPath.getClass())) {
+            return (X) workingPath;
+        }
+        throw new StorageOperationException("Unwrapping wrong instance");
     }
 
     @Override
@@ -60,11 +65,6 @@ public abstract class S3StoragePath<T extends StoragePath<T>> implements Storage
 
     @Override
     public T rename(String target) {
-        return null;
-    }
-
-    @Override
-    public T butLast() {
         return null;
     }
 
