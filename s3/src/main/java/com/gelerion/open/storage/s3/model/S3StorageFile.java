@@ -34,6 +34,12 @@ public class S3StorageFile extends S3StoragePath<StorageFile> implements Storage
     }
 
     @Override
+    public StorageFile rename(String target) {
+        //TODO: test
+        return S3StorageFile.get("s3a://" + bucket + "/" + S3KeySplitter.split(key).butFirst().key() + "/" + target);
+    }
+
+    @Override
     public StorageFile butLast() {
         //TODO:
         return S3StorageFile.get("s3a://" + bucket + "/" + S3KeySplitter.split(key).butLast().key());

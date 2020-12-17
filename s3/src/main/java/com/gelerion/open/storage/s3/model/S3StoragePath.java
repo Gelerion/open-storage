@@ -64,11 +64,6 @@ public abstract class S3StoragePath<T extends StoragePath<T>> implements Storage
     public abstract S3StorageDirectory resolve(S3StorageDirectory dir);
 
     @Override
-    public T rename(String target) {
-        return null;
-    }
-
-    @Override
     public int compareTo(StoragePath that) {
         return workingPath.compareTo(that.toString());
     }

@@ -16,7 +16,7 @@ public class SameStorageCopyTask extends CopyTaskSkeleton {
                 target.resolveTargetPath(sourceFile);
 
         //TODO: [optimization] create dir only once and not per file
-        target.storage().create(tgtFile.parentDir()).move(sourceFile, tgtFile);
+        target.storage()/*.create(tgtFile.parentDir())*/.move(sourceFile, tgtFile);
     };
 
     private final Consumer<StorageFile> deleteFile = file -> source.storage().delete(file);

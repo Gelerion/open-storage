@@ -127,8 +127,23 @@ public class S3Storage implements Storage {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T extends StoragePath<T>> T move(T source, T target) {
-        return null;
+        return dsl.checkValidImplOrFail(source)
+                .whenFile(file -> (T) move(file, (S3StorageFile) target))
+                .whenDir(dir   -> (T) move(dir, (S3StorageDirectory) target));
+    }
+
+    public StorageDirectory move(StorageDirectory source, StorageDirectory target) {
+        throw new RuntimeException("Unimplemented");
+    }
+
+    S3StorageFile move(S3StorageFile source, S3StorageFile target) {
+        return invoker.exec(() -> {
+            final S3StorageFile resolved = source.resolve(target);
+            s3.copyObject(source.bucket(), source.key(), resolved.bucket(), resolved.key());
+            return resolved;
+        });
     }
 
     @Override

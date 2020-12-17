@@ -4,6 +4,8 @@ import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.exceptions.StorageOperationException;
 import com.gelerion.open.storage.s3.utils.S3KeySplitter;
+import com.gelerion.open.storage.s3.utils.S3PathSplitter;
+import com.gelerion.open.storage.s3.utils.S3PathSplitter.BucketAndKey;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -42,6 +44,17 @@ public class S3StorageDirectory extends S3StoragePath<StorageDirectory> implemen
 
     @Override
     public StorageFile toStorageFile(String fileName) {
+        if (fileName.startsWith("s3")) {
+            BucketAndKey bucketAndKey = S3PathSplitter.split(fileName);
+
+            if (!this.bucket.equals(bucketAndKey.bucket())) {
+                throw new StorageOperationException("Can't create a storage file in a different bucket, this bucket - "
+                        + this.bucket + ", that bucket - " + bucketAndKey.bucket());
+            }
+
+            return S3StorageFile.get(workingPath + "/" + bucketAndKey.key().replaceAll("/", ""));
+
+        }
         //TODO: check maybe
         return S3StorageFile.get(workingPath + "/" + fileName.replaceAll("/", ""));
     }
@@ -63,9 +76,13 @@ public class S3StorageDirectory extends S3StoragePath<StorageDirectory> implemen
                     + this.bucket + ", that bucket - " + that.bucket);
         }
 
+        return resolveKeys(that.key);
+    }
+
+    private String resolveKeys(String thatKey) {
         //quite a hack :)
         Path thisPath = Paths.get(this.key);
-        Path thatPath = Paths.get(that.key);
+        Path thatPath = Paths.get(thatKey);
 
 //        if (thatPath.startsWith(thisPath)) {
 //            return workingPath.resolveSibling(thatPath);
@@ -73,7 +90,12 @@ public class S3StorageDirectory extends S3StoragePath<StorageDirectory> implemen
 
         Path normalizedPath = thisPath.relativize(thatPath);
         return thisPath.resolve(normalizedPath).normalize().toString().replaceAll("\\\\", "/")/*.toAbsolutePath().normalize()*/;
+    }
 
+    @Override
+    public StorageDirectory rename(String target) {
+        //TODO: test
+        return S3StorageDirectory.get("s3a://" + bucket + "/" + S3KeySplitter.split(key).butFirst().key() + "/" + target);
     }
 
     @Override
