@@ -18,4 +18,6 @@ public interface StoragePath<T extends StoragePath<T>> extends Comparable<Storag
     //return path with first element removed or file itself
     // a/b/c/file.txt -> b/c/file.txt
     T butLast();
+
+    boolean contains(String part);
 }

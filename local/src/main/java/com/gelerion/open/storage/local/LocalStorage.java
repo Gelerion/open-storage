@@ -14,8 +14,8 @@ import com.gelerion.open.storage.api.rename.DirectoryRenamer;
 import com.gelerion.open.storage.api.rename.FileRenamer;
 import com.gelerion.open.storage.api.rename.Renamer;
 import com.gelerion.open.storage.api.writer.StorageWriter;
-import com.gelerion.open.storage.local.domain.LocalStorageDirectory;
-import com.gelerion.open.storage.local.domain.LocalStorageFile;
+import com.gelerion.open.storage.local.model.LocalStorageDirectory;
+import com.gelerion.open.storage.local.model.LocalStorageFile;
 import com.gelerion.open.storage.local.reader.LocalStorageReader;
 import com.gelerion.open.storage.local.writer.LocalStorageWriter;
 import org.slf4j.Logger;
@@ -144,7 +144,6 @@ public class LocalStorage implements Storage {
     public Set<StorageFile> files(StorageDirectory underDir, ListFilesOption... opts) {
         Path start = underDir.unwrap(Path.class);
         return exec(() -> {
-            //Try with resources is mandatory here, do not remove it!
             try (Stream<Path> stream = recursively(opts) ? Files.walk(start) : Files.list(start)) {
                 return collectFiles(stream).collect(toSet());
             }});

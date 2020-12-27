@@ -4,8 +4,8 @@ import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.local.LocalStorage;
-import com.gelerion.open.storage.local.domain.LocalStorageDirectory;
-import com.gelerion.open.storage.local.domain.LocalStorageFile;
+import com.gelerion.open.storage.local.model.LocalStorageDirectory;
+import com.gelerion.open.storage.local.model.LocalStorageFile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -18,10 +18,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static com.gelerion.open.storage.api.copy.flow.TargetSpec.dir;
-import static com.gelerion.open.storage.api.copy.functions.CopyFunctions.renameTo;
+import static com.gelerion.open.storage.api.copy.flow.SourceSpec.dir;
+import static com.gelerion.open.storage.api.copy.flow.TargetSpec.path;
+import static com.gelerion.open.storage.api.copy.functions.CopyTaskFunctions.renameTo;
 import static com.gelerion.open.storage.api.copy.options.StandardStorageCopyOption.DELETE_SOURCE_FILES;
 import static com.gelerion.open.storage.api.copy.options.StandardStorageCopyOption.FLATTEN;
+import static com.gelerion.open.storage.api.copy.functions.CopyTaskPredicates.*;
 import static java.util.Comparator.reverseOrder;
 import static java.util.function.Function.identity;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -32,6 +34,23 @@ public class LocalCopyTaskTest {
 
     private final List<Path> filesToDelete = new ArrayList<>();
     private final List<String> dirsToDelete = new ArrayList<>();
+
+    @Test
+    void DO_NOT_COMMIT_ME() {
+        String copyTest = "/Users/dshuvalov/Intuit/tmp/copy-test/";
+        LocalStorageDirectory dqRestApi = LocalStorageDirectory.get(copyTest + "data-quality-rest-api-source");
+
+        storage.copy()
+                .source(dir(dqRestApi)
+                        .filter(pathContains("target").negate()
+                                .and(pathContains(".git").negate())
+                                .and(pathContains(".idea").negate())
+                                .and(fileNameEndsWith(".jar").negate())
+                                .and(fileNameStartsWith(".DS").negate())))
+                .target(path(LocalStorageDirectory.get(copyTest, "dq-rest-api-target"))
+                        .peek(file -> System.out.println("about to copy " + file)))
+                .execute();
+    }
 
     @Test
     void copyFile() {
@@ -51,6 +70,37 @@ public class LocalCopyTaskTest {
     }
 
     @Test
+    void copyFile1() {
+        //1. file -> dir --- always flatten, only filename
+        //2. dir  -> dir  --- preserve hierarchy based on a common prefix
+
+        //source: abc/xyz/text.txt
+        //target: abc/efg
+        //result: ---- ???
+        //        abc/efg/text.txt
+
+        //source: qwe/xyz/text.txt
+        //target: abc/efg
+        //result: ---- ???
+        //        abc/efg/text.txt
+
+        // copy 'qwe' dir to 'abc/efg'
+        //source: qwe/xyz/text.txt
+        //        qwe/sde/xyz/text.txt
+        //target: abc/efg
+        //result: ---- ???
+        //        abc/efg/xyz/text.txt
+        //        abc/efg/sde/xyz/text.txt
+
+
+        //source: qwe/xyz/text.txt
+        //        hjk/sde/xyz/text.txt
+        //target: abc/efg
+        //result: ---- ???
+    }
+
+
+    @Test
     void copyAndRename() {
         String dir = "abc";
         String fileName = "test.txt";
@@ -62,7 +112,7 @@ public class LocalCopyTaskTest {
         String newName = "test2.txt";
         storage.copy()
                 .source(file)
-                .target(dir(tgtDir).map(renameTo(newName)))
+                .target(path(tgtDir).map(renameTo(newName)))
                 .execute();
 
         //source: abc/text.txt
@@ -103,7 +153,7 @@ public class LocalCopyTaskTest {
         String newName = "test2.txt";
         storage.copy()
                 .source(file)
-                .target(dir(tgtDir).map(it -> it.rename(newName)))
+                .target(path(tgtDir).map(it -> it.rename(newName)))
                 .execute();
 
         assertTrue(Files.exists(tgtDir.toStorageFile(newName).unwrap(Path.class)));
@@ -155,7 +205,8 @@ public class LocalCopyTaskTest {
          */
 
         StorageDirectory tgtDir = createDir("cba");
-        storage.copy().source(abcDir).target(tgtDir).execute();
+        storage.copy().source(abcDir).target(tgtDir)
+                .execute();
         //TODO: copy option DELETE SOURCE
 
        /* Expected result

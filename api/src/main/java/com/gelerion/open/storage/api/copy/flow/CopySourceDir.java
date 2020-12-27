@@ -17,10 +17,10 @@ public class CopySourceDir extends SourceSpec {
     //TODO: optimize:
     @Override
     Stream<StorageFile> files() {
-        final Stream<StorageFile> stream = sourceStorage.files(dir, RECURSIVELY).stream()
+        final Stream<StorageFile> stream = sorage.files(dir, RECURSIVELY).stream()
                 .map(file -> {
                     if (mapper == null) return file;
-                    return mapper.onFile(sourceStorage, file);
+                    return mapper.onFile(sorage, file);
                 });
 
         if (predicate != null) return stream.filter(predicate);

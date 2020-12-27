@@ -17,7 +17,7 @@ public class CopySourceFile extends SourceSpec {
         final Stream<StorageFile> stream = Stream.of(file)
                 .map(file -> {
                     if (mapper == null) return file;
-                    return mapper.onFile(sourceStorage, file);
+                    return mapper.onFile(sorage, file);
                 });
 
         if (predicate != null) return stream.filter(predicate);

@@ -1,4 +1,4 @@
-package com.gelerion.open.storage.local.domain;
+package com.gelerion.open.storage.local.model;
 
 import com.gelerion.open.storage.api.domain.StorageFile;
 

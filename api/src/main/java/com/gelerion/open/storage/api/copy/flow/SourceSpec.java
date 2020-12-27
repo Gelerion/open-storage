@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 public abstract class SourceSpec {
     protected OnSourceFileListener mapper;
     protected Predicate<StorageFile> predicate;
-    protected Storage sourceStorage;
+    protected Storage sorage;
 
     public static SourceSpec file(StorageFile file) {
         Objects.requireNonNull(file);
@@ -32,7 +32,7 @@ public abstract class SourceSpec {
 
 
     SourceSpec withStorage(Storage storage) {
-        this.sourceStorage = storage;
+        this.sorage = storage;
         return this;
     }
 

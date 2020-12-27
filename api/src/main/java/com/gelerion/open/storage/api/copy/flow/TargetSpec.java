@@ -5,6 +5,7 @@ import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class TargetSpec {
@@ -22,9 +23,25 @@ public class TargetSpec {
         this.tgtDir = dir;
     }
 
-    public static TargetSpec dir(StorageDirectory dir) {
+    public static TargetSpec path(StorageDirectory dir) {
         Objects.requireNonNull(dir);
         return new TargetSpec(dir);
+    }
+
+    public static TargetSpec dir(StorageDirectory dir) {
+        return path(dir);
+    }
+
+    public TargetSpec peek(Consumer<StorageFile> onBeforeCopy) {
+        Objects.requireNonNull(onBeforeCopy);
+        Function<StorageFile, StorageFile> function = file -> {
+            onBeforeCopy.accept(file);
+            return file;
+        };
+
+        if (this.onBeforeCopy == null) this.onBeforeCopy = function;
+        else this.onBeforeCopy = this.onBeforeCopy.andThen(function);
+        return this;
     }
 
     public TargetSpec map(Function<StorageFile, StorageFile> onBeforeCopy) {
@@ -74,7 +91,7 @@ public class TargetSpec {
 //        return tgtDir.toStorageFile(sourceFile.fileName());
 //    }
 
-    StorageDirectory dir() {
+    StorageDirectory path() {
         return tgtDir;
     }
 }

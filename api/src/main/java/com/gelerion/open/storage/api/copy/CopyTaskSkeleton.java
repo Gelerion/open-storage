@@ -1,14 +1,16 @@
 package com.gelerion.open.storage.api.copy;
 
 import com.gelerion.open.storage.api.copy.flow.CopyFlow;
+import com.gelerion.open.storage.api.copy.flow.CopyFlow.Source;
+import com.gelerion.open.storage.api.copy.flow.CopyFlow.Target;
 import com.gelerion.open.storage.api.copy.options.StorageCopyOption;
 
 public abstract class CopyTaskSkeleton implements CopyTask {
-    protected final CopyFlow.Source source;
-    protected final CopyFlow.Target target;
+    protected final Source source;
+    protected final Target target;
     protected StorageCopyOption[] copyOptions;
 
-    public CopyTaskSkeleton(CopyFlow.Source source, CopyFlow.Target target) {
+    public CopyTaskSkeleton(Source source, Target target) {
         this.source = source;
         this.target = target;
         this.copyOptions = new StorageCopyOption[]{};

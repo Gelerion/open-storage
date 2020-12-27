@@ -3,16 +3,17 @@ package com.gelerion.open.storage.api.copy.flow;
 import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.copy.CopyTask;
 import com.gelerion.open.storage.api.copy.ForeignStorageCopyTask;
-import com.gelerion.open.storage.api.copy.SameStorageCopyTask;
+import com.gelerion.open.storage.api.copy.factory.CopyTaskFactory;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.gelerion.open.storage.api.copy.flow.SourceSpec.path;
-import static com.gelerion.open.storage.api.copy.flow.TargetSpec.dir;
 
 public class CopyFlow implements CopySource, CopyTarget {
     private Storage storage;
@@ -61,7 +62,7 @@ public class CopyFlow implements CopySource, CopyTarget {
     public CopyTask target(Storage storage, StorageDirectory dir) {
         Objects.requireNonNull(dir);
         Objects.requireNonNull(storage);
-        return target(storage, dir(dir));
+        return target(storage, TargetSpec.path(dir));
     }
 
     @Override
@@ -77,7 +78,7 @@ public class CopyFlow implements CopySource, CopyTarget {
         this.target = new CopyFlow.Target(spec.withStorage(storage));
 
         if (source.storage().scheme().equals(target.storage().scheme())) {
-            return new SameStorageCopyTask(source, target);
+            return CopyTaskFactory.getProvider(source.storage().scheme()).createCopyTask(source, target);
         }
 
         return new ForeignStorageCopyTask(source, target);
@@ -95,7 +96,7 @@ public class CopyFlow implements CopySource, CopyTarget {
         }
 
         public Storage storage() {
-            return sourceSpec.sourceStorage;
+            return sourceSpec.sorage;
         }
     }
 
@@ -111,13 +112,29 @@ public class CopyFlow implements CopySource, CopyTarget {
 //        }
 
         public StorageDirectory dir() {
-            return targetSpec.dir();
+            return targetSpec.path();
         }
 
         //todo handle absolute path - say s3a:// to file://
-        public StorageFile resolveTargetPath(StorageFile sourceFile) {
-            final StorageFile file = dir().toStorageFile(sourceFile.butLast().toString());
-            return targetSpec.applyTransformations(file);
+        public Stream<StorageFile> resolveTargetPath(List<StorageFile> sourceFiles) {
+            //file to file
+            if (sourceFiles.size() == 1) {
+                final StorageFile file = dir().toStorageFile(sourceFiles.get(0).fileName());
+                return Stream.of(targetSpec.applyTransformations(file));
+            }
+
+            String[] paths = sourceFiles.stream().map(Object::toString).toArray(String[]::new);
+
+            String commonPrefix = longestCommonPrefix(paths);
+
+            //relativize
+            List<StorageFile> res = sourceFiles.stream()
+                    .map(Object::toString)
+                    .map(path -> path.substring(commonPrefix.length()))
+                    .map(relaitivazedPath -> dir().toStorageFile(relaitivazedPath))
+                    .collect(Collectors.toList());
+
+            return res.stream().map(targetSpec::applyTransformations);
         }
 
         public StorageFile resolveTargetPathFlatten(StorageFile sourceFile) {
@@ -127,6 +144,18 @@ public class CopyFlow implements CopySource, CopyTarget {
 
         public Storage storage() {
             return targetSpec.targetStorage;
+        }
+
+        String longestCommonPrefix(String[] strs) {
+            if(strs == null || strs.length == 0) return "";
+            String pre = strs[0];
+            int i = 1;
+            while(i < strs.length){
+                while(strs[i].indexOf(pre) != 0)
+                    pre = pre.substring(0,pre.length()-1);
+                i++;
+            }
+            return pre;
         }
     }
 }

@@ -4,8 +4,8 @@ import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.local.LocalStorage;
-import com.gelerion.open.storage.local.domain.LocalStorageDirectory;
-import com.gelerion.open.storage.local.domain.LocalStorageFile;
+import com.gelerion.open.storage.local.model.LocalStorageDirectory;
+import com.gelerion.open.storage.local.model.LocalStorageFile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

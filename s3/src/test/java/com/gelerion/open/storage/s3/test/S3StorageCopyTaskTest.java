@@ -25,7 +25,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.time.Duration;
 import java.util.stream.Stream;
 
-import static com.gelerion.open.storage.api.copy.flow.TargetSpec.dir;
+import static com.gelerion.open.storage.api.copy.flow.TargetSpec.path;
 import static com.gelerion.open.storage.api.copy.options.StandardStorageCopyOption.DELETE_SOURCE_FILES;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -110,7 +110,7 @@ public class S3StorageCopyTaskTest {
         //result: efg/test.txt
         storage.copy()
                 .source(file)
-                .target(dir(tgtDir).map(it -> it.rename("test2.txt")))
+                .target(path(tgtDir).map(it -> it.rename("test2.txt")))
                 .execute();
 
         assertTrue(storage.exists(tgtDir.toStorageFile("test2.txt")));

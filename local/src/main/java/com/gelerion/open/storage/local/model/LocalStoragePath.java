@@ -1,4 +1,4 @@
-package com.gelerion.open.storage.local.domain;
+package com.gelerion.open.storage.local.model;
 
 import com.gelerion.open.storage.api.domain.StoragePath;
 import com.gelerion.open.storage.api.dsl.PathImplCheckerDsl;
@@ -68,6 +68,11 @@ public abstract class LocalStoragePath<T extends StoragePath<T>> implements Stor
         if (o == null || getClass() != o.getClass()) return false;
         LocalStoragePath<?> that = (LocalStoragePath<?>) o;
         return Objects.equals(workingPath, that.workingPath);
+    }
+
+    @Override
+    public boolean contains(String part) {
+        return workingPath.toString().contains(part);
     }
 
     @Override

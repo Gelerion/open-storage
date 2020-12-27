@@ -25,8 +25,10 @@ public interface CopyTask {
 
     CopyTask options(StorageCopyOption... options);
 
+    //dryRun
+
     /**
-     * non blocking call, managed internally in common thread pool
+     * non blocking call, managed internally in a common thread pool
      */
     //CopyTaskFuture addToCopyQueue();
 }

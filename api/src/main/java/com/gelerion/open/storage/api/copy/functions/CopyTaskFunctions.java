@@ -4,7 +4,7 @@ import com.gelerion.open.storage.api.domain.StorageFile;
 
 import java.util.function.Function;
 
-public class CopyFunctions {
+public class CopyTaskFunctions {
 
     //renameTo oldName -> newName
     public static Function<StorageFile, StorageFile> renameTo(String newName) {
