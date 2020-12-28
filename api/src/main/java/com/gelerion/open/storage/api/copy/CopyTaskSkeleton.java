@@ -1,6 +1,5 @@
 package com.gelerion.open.storage.api.copy;
 
-import com.gelerion.open.storage.api.copy.flow.CopyFlow;
 import com.gelerion.open.storage.api.copy.flow.CopyFlow.Source;
 import com.gelerion.open.storage.api.copy.flow.CopyFlow.Target;
 import com.gelerion.open.storage.api.copy.options.StorageCopyOption;

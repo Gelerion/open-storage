@@ -34,14 +34,10 @@ public class TargetSpec {
 
     public TargetSpec peek(Consumer<StorageFile> onBeforeCopy) {
         Objects.requireNonNull(onBeforeCopy);
-        Function<StorageFile, StorageFile> function = file -> {
+        return map(file -> {
             onBeforeCopy.accept(file);
             return file;
-        };
-
-        if (this.onBeforeCopy == null) this.onBeforeCopy = function;
-        else this.onBeforeCopy = this.onBeforeCopy.andThen(function);
-        return this;
+        });
     }
 
     public TargetSpec map(Function<StorageFile, StorageFile> onBeforeCopy) {

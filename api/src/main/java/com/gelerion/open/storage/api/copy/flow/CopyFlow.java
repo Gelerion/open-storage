@@ -4,13 +4,13 @@ import com.gelerion.open.storage.api.Storage;
 import com.gelerion.open.storage.api.copy.CopyTask;
 import com.gelerion.open.storage.api.copy.ForeignStorageCopyTask;
 import com.gelerion.open.storage.api.copy.factory.CopyTaskFactory;
+import com.gelerion.open.storage.api.copy.resolver.TargetPathResolver;
 import com.gelerion.open.storage.api.domain.StorageDirectory;
 import com.gelerion.open.storage.api.domain.StorageFile;
 import com.gelerion.open.storage.api.domain.StoragePath;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.gelerion.open.storage.api.copy.flow.SourceSpec.path;
@@ -85,77 +85,43 @@ public class CopyFlow implements CopySource, CopyTarget {
     }
 
     public static class Source {
-        private final SourceSpec sourceSpec;
+        private final SourceSpec spec;
 
-        private Source(SourceSpec sourceSpec) {
-            this.sourceSpec = sourceSpec;
+        private Source(SourceSpec spec) {
+            this.spec = spec;
         }
 
         public Stream<StorageFile> files() {
-            return sourceSpec.files();
+            return spec.files();
         }
 
         public Storage storage() {
-            return sourceSpec.sorage;
+            return spec.sorage;
         }
     }
 
     public static class Target {
-        private final TargetSpec targetSpec;
+        private final TargetSpec spec;
 
-        public Target(TargetSpec targetSpec) {
-            this.targetSpec = targetSpec;
+        public Target(TargetSpec spec) {
+            this.spec = spec;
         }
-
-//        public StorageFile resolve(StorageFile sourceFile) {
-//            return targetSpec.resolve(sourceFile);
-//        }
 
         public StorageDirectory dir() {
-            return targetSpec.path();
+            return spec.path();
         }
 
-        //todo handle absolute path - say s3a:// to file://
-        public Stream<StorageFile> resolveTargetPath(List<StorageFile> sourceFiles) {
-            //file to file
-            if (sourceFiles.size() == 1) {
-                final StorageFile file = dir().toStorageFile(sourceFiles.get(0).fileName());
-                return Stream.of(targetSpec.applyTransformations(file));
-            }
-
-            String[] paths = sourceFiles.stream().map(Object::toString).toArray(String[]::new);
-
-            String commonPrefix = longestCommonPrefix(paths);
-
-            //relativize
-            List<StorageFile> res = sourceFiles.stream()
-                    .map(Object::toString)
-                    .map(path -> path.substring(commonPrefix.length()))
-                    .map(relaitivazedPath -> dir().toStorageFile(relaitivazedPath))
-                    .collect(Collectors.toList());
-
-            return res.stream().map(targetSpec::applyTransformations);
+        public StorageFile applyTransformations(StorageFile file) {
+            return spec.applyTransformations(file);
         }
 
-        public StorageFile resolveTargetPathFlatten(StorageFile sourceFile) {
-            final StorageFile file = dir().toStorageFile(sourceFile.name());
-            return targetSpec.applyTransformations(file);
+        public TargetPathResolver resolver(List<StorageFile> sourceFiles, boolean flatten) {
+            return TargetPathResolver.get(this, sourceFiles, flatten);
         }
 
         public Storage storage() {
-            return targetSpec.targetStorage;
+            return spec.targetStorage;
         }
 
-        String longestCommonPrefix(String[] strs) {
-            if(strs == null || strs.length == 0) return "";
-            String pre = strs[0];
-            int i = 1;
-            while(i < strs.length){
-                while(strs[i].indexOf(pre) != 0)
-                    pre = pre.substring(0,pre.length()-1);
-                i++;
-            }
-            return pre;
-        }
     }
 }

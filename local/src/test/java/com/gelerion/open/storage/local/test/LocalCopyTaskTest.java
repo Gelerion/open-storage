@@ -35,22 +35,22 @@ public class LocalCopyTaskTest {
     private final List<Path> filesToDelete = new ArrayList<>();
     private final List<String> dirsToDelete = new ArrayList<>();
 
-    @Test
-    void DO_NOT_COMMIT_ME() {
-        String copyTest = "/Users/dshuvalov/Intuit/tmp/copy-test/";
-        LocalStorageDirectory dqRestApi = LocalStorageDirectory.get(copyTest + "data-quality-rest-api-source");
-
-        storage.copy()
-                .source(dir(dqRestApi)
-                        .filter(pathContains("target").negate()
-                                .and(pathContains(".git").negate())
-                                .and(pathContains(".idea").negate())
-                                .and(fileNameEndsWith(".jar").negate())
-                                .and(fileNameStartsWith(".DS").negate())))
-                .target(path(LocalStorageDirectory.get(copyTest, "dq-rest-api-target"))
-                        .peek(file -> System.out.println("about to copy " + file)))
-                .execute();
-    }
+//    @Test
+//    void DO_NOT_COMMIT_ME() {
+//        String copyTest = "/Users/dshuvalov/Intuit/tmp/copy-test/";
+//        LocalStorageDirectory dqRestApi = LocalStorageDirectory.get(copyTest + "data-quality-rest-api-source");
+//
+//        storage.copy()
+//                .source(dir(dqRestApi)
+//                        .filter(pathContains("target").negate()
+//                                .and(pathContains(".git").negate())
+//                                .and(pathContains(".idea").negate())
+//                                .and(fileNameEndsWith(".jar").negate())
+//                                .and(fileNameStartsWith(".DS").negate())))
+//                .target(path(LocalStorageDirectory.get(copyTest, "dq-rest-api-target"))
+//                        .peek(file -> System.out.println("about to copy " + file)))
+//                .execute();
+//    }
 
     @Test
     void copyFile() {
